@@ -1,0 +1,200 @@
+# Documentation: https://ugr-sail.github.io/sinergym/compilation/main/pages/environments_registration.html
+# ---------------------------------------------------------------------------- #
+#                        ID BASE FROM ENVIRONMNET NAMES                        #
+# ---------------------------------------------------------------------------- #
+id_base: StripMall
+
+# ---------------------------------------------------------------------------- #
+#                         BUILDING AND WEATHER SETTINGS                        #
+# ---------------------------------------------------------------------------- #
+# Rule-sized model with the chilled-water TES plant (225 kW chiller, 135.6 m3 tank,
+# weekend HVAC off).
+building_file: StripMall_r1.epJSON
+
+# A environment alternative for each weather key
+weather_specification:
+  weather_files:
+    - USA_AZ_Davis-Monthan.AFB.722745_TMY3.epw
+    - USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw
+    - USA_WA_Port.Angeles-William.R.Fairchild.Intl.AP.727885_TMY3.epw
+    - USA_IL_Chicago-OHare.Intl.AP.725300_TMYx.2007-2021.epw
+    - USA_NY_New.York-J.F.Kennedy.Intl.AP.744860_TMY3.epw
+    - USA_PA_Pittsburgh-Allegheny.County.AP.725205_TMY3.epw
+  keys:
+    - hot
+    - mixed
+    - cool
+    - mixedx
+    - nyc
+    - pit
+
+# ---------------------------------------------------------------------------- #
+#                         BUILDING EXTRA CONFIGURATION                         #
+# ---------------------------------------------------------------------------- #
+building_config:
+  runperiod: [1, 6, 1991, 30, 9, 1991]
+
+
+# ---------------------------------------------------------------------------- #
+#                        WEATHER VARIABILITY (OPTIONAL)                        #
+# ---------------------------------------------------------------------------- #
+weather_variability:
+  Dry Bulb Temperature:
+    - 1.0
+    - 0.0
+    - 24.0
+  Relative Humidity:
+    - [2.0, 5.0]
+    - 0.0
+    - 24.0
+    - [0, 100]
+
+# ---------------------------------------------------------------------------- #
+#                          EPISODES FOLDER GENERATION                          #
+# ---------------------------------------------------------------------------- #
+max_ep_store: 3
+
+# ---------------------------------------------------------------------------- #
+#                             OBSERVATION VARIABLES                            #
+# ---------------------------------------------------------------------------- #
+
+time_variables:
+  - month
+  - day_of_month
+  - hour
+  - minutes
+
+variables:
+
+  Site Outdoor Air DryBulb Temperature:
+    variable_names: outdoor_temperature
+    keys: Environment
+  Site Outdoor Air Relative Humidity:
+    variable_names: outdoor_humidity
+    keys: Environment
+
+  Zone Air Temperature:
+    variable_names: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+    keys: [LGstore1, LGstore2, SMstore1, SMstore2, SMstore3, SMstore4, SMstore5, SMstore6, SMstore7, SMstore8]
+
+  Zone Thermostat Cooling Setpoint Temperature:
+    variable_names: [Z1C_setpoint, Z2C_setpoint, Z3C_setpoint, Z4C_setpoint, Z5C_setpoint, Z6C_setpoint, Z7C_setpoint, Z8C_setpoint, Z9C_setpoint, Z10C_setpoint]
+    keys: [LGstore1, LGstore2, SMstore1, SMstore2, SMstore3, SMstore4, SMstore5, SMstore6, SMstore7, SMstore8]
+
+  Schedule Value:
+    variable_names: [occupancy_fraction]
+    keys: [BLDG_OCC_SCH]
+
+  Chilled Water Thermal Storage Final Tank Temperature:
+    variable_names: CWtank_final
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Temperature Node 1:
+    variable_names: CWtank_node1
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Temperature Node 2:
+    variable_names: CWtank_node2
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Temperature Node 3:
+    variable_names: CWtank_node3
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Temperature Node 4:
+    variable_names: CWtank_node4
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Temperature Node 5:
+    variable_names: CWtank_node5
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Temperature Node 6:
+    variable_names: CWtank_node6
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Use Side Outlet Temperature:
+    variable_names: CWtank_use_outlet
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Use Side Inlet Temperature:
+    variable_names: CWtank_use_inlet
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Source Side Inlet Temperature:
+    variable_names: CWtank_source_inlet
+    keys: CHILLED WATER STORAGE TANK 1
+  Chilled Water Thermal Storage Source Side Outlet Temperature:
+    variable_names: CWtank_source_outlet
+    keys: CHILLED WATER STORAGE TANK 1
+
+  Chilled Water Thermal Storage Use Side Heat Transfer Rate:
+    variable_names: CoolingRate
+    keys: CHILLED WATER STORAGE TANK 1
+
+  Chiller Electricity Rate:
+    variable_names: ChillerElectricity
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller Evaporator Cooling Rate:
+    variable_names: EvapCoolingRate
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller Evaporator Inlet Temperature:
+    variable_names: EvapInletT
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller Evaporator Outlet Temperature:
+    variable_names: EvapOutletT
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller Part Load Ratio:
+    variable_names: ChillerPLR
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller Cycling Ratio:
+    variable_names: ChillerCyclingRatio
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller Capacity Temperature Modifier Multiplier:
+    variable_names: CapFT
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller EIR Temperature Modifier Multiplier:
+    variable_names: EIRfT
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller EIR Part Load Modifier Multiplier:
+    variable_names: EIRfPLR
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller Condenser Inlet Temperature:
+    variable_names: CondInletT
+    keys: COOLSYSPRIMARY CHILLER
+  Chiller COP:
+    variable_names: ChillerCOP
+    keys: COOLSYSPRIMARY CHILLER
+
+meters: {}
+
+# ---------------------------------------------------------------------------- #
+#                               ACTION VARIABLES                               #
+# ---------------------------------------------------------------------------- #
+
+actuators:
+  CW-TANK-TEMP-SCHEDULE:
+    variable_name: CWtank_setpoint
+    element_type: Schedule:Compact
+    value_type: Schedule Value
+
+context: {}
+
+action_space: gym.spaces.Box(low=np.array([5.0], dtype=np.float32), high=np.array([10.0], dtype=np.float32), shape=(1,), dtype=np.float32)  # 2026-06-06: aligned 12.0 -> 10.0 to paper spec and the other 4 buildings; cross-building transfer requires identical action boxes
+
+# ---------------------------------------------------------------------------- #
+#                                REWARD FUNCTION                               #
+# ---------------------------------------------------------------------------- #
+reward: sinergym.utils.rewards:LinearReward
+
+reward_kwargs:
+  temperature_variables:
+    - Z1_temperature
+  energy_variables:
+    - ChillerElectricity
+  range_comfort_winter:
+    - 20.0
+    - 22.0
+  range_comfort_summer:
+    - 18.0
+    - 22.0
+  summer_start:
+    - 6
+    - 1
+  summer_final:
+    - 9
+    - 30
+  energy_weight: 0.5
+  lambda_energy: 1.0
+  lambda_temperature: 1.0

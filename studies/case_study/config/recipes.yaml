@@ -1,0 +1,5613 @@
+# --- OEB Ontario summer TOU price schedules (¢/kWh) ---
+# Schedule: 0-6 off, 7-10 mid, 11-16 on, 17-18 mid, 19-23 off
+# Toggle reward profiles below by changing `*oeb_2x` ↔ `*oeb_1x`
+_oeb_schedules:
+  oeb_1x: &oeb_1x
+    [0.098, 0.098, 0.098, 0.098, 0.098, 0.098, 0.098, 0.157, 0.157, 0.157, 0.157, 0.203, 0.203, 0.203, 0.203, 0.203, 0.203, 0.157, 0.157, 0.098, 0.098, 0.098, 0.098, 0.098]
+  # peak ratio 2.07× off (native OEB pricing)
+  oeb_2x: &oeb_2x
+    [0.098, 0.098, 0.098, 0.098, 0.098, 0.098, 0.098, 0.157, 0.157, 0.157, 0.157, 0.406, 0.406, 0.406, 0.406, 0.406, 0.406, 0.157, 0.157, 0.098, 0.098, 0.098, 0.098, 0.098]
+  # peak ratio 4.14× off (2× peak amplification)
+  # --- SMUD TOD-5-8pm tariff (Sacramento Municipal Utility District summer rate) ---
+  # Off-peak  midnight–noon ($0.155/kWh)  [12 hours]
+  # Mid-peak  noon–5pm + 8pm–midnight ($0.2139/kWh)  [9 hours]
+  # On-peak   5pm–8pm ($0.3765/kWh)  [3 hours, peak ratio 2.43× off]
+  smud: &smud
+    [0.155, 0.155, 0.155, 0.155, 0.155, 0.155, 0.155, 0.155, 0.155, 0.155, 0.155, 0.155,
+     0.2139, 0.2139, 0.2139, 0.2139, 0.2139, 0.3765, 0.3765, 0.3765, 0.2139, 0.2139, 0.2139, 0.2139]
+
+  # Sharp TOU variant (2026-06-01) — 8× peak/off spread for env ablation.
+  # SMUD canonical is 2.43× (0.155 / 0.3765), too narrow for dynamic policy
+  # to outperform best static (RBC1 = best static for Office/WH already).
+  # Schedule shape same (peak at 17-19), only amplitudes scaled.
+  smud_sharp: &smud_sharp
+    [0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10, 0.10,
+     0.20, 0.20, 0.20, 0.20, 0.20, 0.80, 0.80, 0.80, 0.20, 0.20, 0.20, 0.20]
+
+reward_profiles:
+  restaurant_reward:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      # OEB Ontario summer with 2× peak amplification: 9.8 off / 15.7 mid / 40.6 peak (¢/kWh)
+      # Schedule: 0-6 off, 7-10 mid, 11-16 on, 17-18 mid, 19-23 off
+      price_schedule: *oeb_1x
+      occupied_hours: [11, 22]
+      exclude_days: [5, 6]
+
+  office_reward:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      # OEB Ontario summer with 2× peak amplification: 9.8 off / 15.7 mid / 40.6 peak (¢/kWh)
+      # Schedule: 0-6 off, 7-10 mid, 11-16 on, 17-18 mid, 19-23 off
+      price_schedule: *oeb_1x
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+
+  lbuilding_reward:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      # OEB Ontario summer with 2× peak amplification: 9.8 off / 15.7 mid / 40.6 peak (¢/kWh)
+      # Schedule: 0-6 off, 7-10 mid, 11-16 on, 17-18 mid, 19-23 off
+      price_schedule: *oeb_1x
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+
+  stripmall_reward:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      energy_variables: [ChillerElectricity]
+      # Cooling setpoint = 24°C (epJSON CLGSETP_SCH); range contains setpoint mid.
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      # OEB Ontario summer with 2× peak amplification: 9.8 off / 15.7 mid / 40.6 peak (¢/kWh)
+      # Schedule: 0-6 off, 7-10 mid, 11-16 on, 17-18 mid, 19-23 off
+      price_schedule: *oeb_1x
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+
+
+  # Warehouse: 3 zones, but only Office (Zone1) has people → comfort band on Office only.
+  # Office cooling SP = 23.9°C 7-18h; range_comfort [22, 26] contains setpoint with margin.
+  # Weekday-only: Saturday cooling=33C in epJSON, exclude_days=[5,6].
+  warehouse_reward:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Office_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      # OEB Ontario summer with 2× peak amplification: 9.8 off / 15.7 mid / 40.6 peak (¢/kWh)
+      price_schedule: *oeb_1x
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+
+  # === SMUD variants (TOD-5-8pm tariff) ===
+  office_reward_smud:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 0.0
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  # Comfort-weighted variants: linear comfort term whose weight lambda_T makes
+  # the comfort sum equal rho x the cost sum over the RBC season,
+  # rho = 0.01 / 0.1 / 1 / 10 for cw1..cw4.
+  office_reward_smud_cw1:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 414.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  office_reward_smud_cw2:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 4140.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  office_reward_smud_cw3:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 41400.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  office_reward_smud_cw4:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 414000.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+
+  # Sharp TOU variant (2026-06-01) — 8× peak/off spread.
+  office_reward_smud_sharp:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      price_schedule: *smud_sharp
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+
+  lbuilding_reward_smud_sharp:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      price_schedule: *smud_sharp
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+
+  warehouse_reward_smud_sharp:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Office_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      price_schedule: *smud_sharp
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+
+  mediumoffice_reward_smud_sharp:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 28.0]
+      range_comfort_summer: [20.0, 28.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9.0
+      price_schedule: *smud_sharp
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+
+  lbuilding_reward_smud:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 0.0
+      price_schedule: *smud
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+  # Comfort-weighted variants: linear comfort term whose weight lambda_T makes
+  # the comfort sum equal rho x the cost sum over the RBC season,
+  # rho = 0.01 / 0.1 / 1 / 10 for cw1..cw4.
+  lbuilding_reward_smud_cw1:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9498.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+  lbuilding_reward_smud_cw2:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 94980.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+  lbuilding_reward_smud_cw3:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 949800.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+  lbuilding_reward_smud_cw4:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [20.0, 22.0]
+      range_comfort_summer: [18.0, 22.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 9498000.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+  warehouse_reward_smud:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Office_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 0.0
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  # Comfort-weighted variants: linear comfort term whose weight lambda_T makes
+  # the comfort sum equal rho x the cost sum over the RBC season,
+  # rho = 0.01 / 0.1 / 1 / 10 for cw1..cw4.
+  warehouse_reward_smud_cw1:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Office_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 270.8
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  warehouse_reward_smud_cw2:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Office_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 2708.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  warehouse_reward_smud_cw3:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Office_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 27080.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  warehouse_reward_smud_cw4:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Office_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 270800.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+
+  # MediumOffice (15 conditioned zones) — added 2026-05-29.
+  # Cooling SP 24°C weekday (CLGSETP_SCH), 33°C weekend (weekday-only convention).
+  # Comfort band [20, 28]: relaxes frequent violations in some 15-zone zones. +-4 C slack.
+  mediumoffice_reward_smud:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 0.0
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  # Comfort-weighted variants: linear comfort term whose weight lambda_T makes
+  # the comfort sum equal rho x the cost sum over the RBC season,
+  # rho = 0.01 / 0.1 / 1 / 10 for cw1..cw4.
+  mediumoffice_reward_smud_cw1:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 3747.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  mediumoffice_reward_smud_cw2:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 37470.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  mediumoffice_reward_smud_cw3:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 374700.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+  mediumoffice_reward_smud_cw4:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 3747000.0
+      comfort_form: linear
+      price_schedule: *smud
+      occupied_hours: [7, 18]
+      exclude_days: [5, 6]
+
+  # Default mediumoffice reward (used outside case_study smud overrides; kept for sanity)
+  mediumoffice_reward:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 1.0
+      occupied_hours: [8, 18]
+      exclude_days: [5, 6]
+  stripmall_reward_smud:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      energy_variables: [ChillerElectricity]
+      # Cooling setpoint = 24°C (epJSON CLGSETP_SCH); range contains setpoint mid.
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      # Cost-only, as the four original buildings. Occupied 07-21 h local
+      # (weekday occupancy > 0 in the model); the model runs on daylight-saving
+      # time while the hour label is standard time, so [6, 20] in the label.
+      lambda_temperature: 0.0
+      price_schedule: *smud
+      occupied_hours: [6, 20]
+      exclude_days: [5, 6]
+
+
+  restaurant_reward_smud:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      # Cost-only, as the four original buildings.
+      lambda_temperature: 0.0
+      price_schedule: *smud
+      # Occupied 11-22 h local (original schedule). The model runs its
+      # schedules on daylight-saving time while the hour label is standard
+      # time, so the window is 10-21 in the label.
+      occupied_hours: [10, 21]
+      exclude_days: [5, 6]
+
+  # DOE 90.1-2019 stand-alone retail (RT). Occupied cooling setpoint 23.89 C ->
+  # [22, 26] (as WH 23.9 C). Occupied = weekday setpoint window with occupancy > 0
+  # = 07-21 h local; daylight-saving model, so [6, 20] in the standard-time label.
+  retail_reward_smud:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 0.0
+      price_schedule: *smud
+      occupied_hours: [6, 20]
+      exclude_days: [5, 6]
+
+  # DOE 90.1-2019 quick-service (fast-food) restaurant (QS). Band =
+  # occupied cooling setpoint +- 2 C per zone: Dining (Z1) 23.89 C -> [22, 26] (as retail and
+  # WH 23.9 C), Kitchen (Z2) 26.11 C -> [24.11, 28.11]. Occupied = weekday setpoint window
+  # with occupancy > 0 = 05-24 h local; DST model, so [4, 23] in the label.
+  fastfood_reward_smud:
+    class: TimeVaryingCostLinearReward
+    kwargs:
+      temperature_variables: [Z1_temperature, Z2_temperature]
+      energy_variables: [ChillerElectricity]
+      range_comfort_winter: [22.0, 26.0]
+      range_comfort_summer: [22.0, 26.0]
+      zone_comfort_ranges:
+        Z1_temperature: [22.0, 26.0]
+        Z2_temperature: [24.11, 28.11]
+      summer_start: [6, 1]
+      summer_final: [9, 30]
+      energy_weight: 0.5
+      lambda_energy: 1.0
+      lambda_temperature: 0.0
+      price_schedule: *smud
+      occupied_hours: [4, 23]
+      exclude_days: [5, 6]
+
+observation_profiles:
+
+  restaurant_observation_export:
+    reduce_observation: [month, day_of_month]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+        - Direct Normal Radiation
+        - Diffuse Horizontal Radiation
+
+  office_observation_export:
+    reduce_observation: [month, day_of_month]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+        - Direct Normal Radiation
+        - Diffuse Horizontal Radiation
+
+  lbuilding_observation_export:
+    reduce_observation: [month, day_of_month]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+        - Direct Normal Radiation
+        - Diffuse Horizontal Radiation
+
+  stripmall_observation_export:
+    reduce_observation: [month, day_of_month]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+        - Direct Normal Radiation
+        - Diffuse Horizontal Radiation
+
+  mediumoffice_observation_export:
+    datetime: true    # added 2026-05-29 for RBC compatibility (needs hour_sin/cos)
+    day_of_week: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+        - Direct Normal Radiation
+        - Diffuse Horizontal Radiation
+    physical_normalize_reward: true   # added 2026-06-01 for unit consistency
+    discretize_action:                 # added 2026-06-01: RBC needs discrete {5, 12} mapping
+      n: 2
+      values: [5.0, 10.0]
+
+  warehouse_observation_export:
+    reduce_observation: [month, day_of_month]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+        - Direct Normal Radiation
+        - Diffuse Horizontal Radiation
+
+  # ============================================================
+  # Proposed method profiles (50-dim o'_t, eq.16)
+  # All use the SAME reduce_observation for transfer invariance
+  # ============================================================
+
+
+  restaurant_feature_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: &proposed_27dim
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate          # Q_load_t — paper eq.12 current realized load (added 2026-05-29)
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  office_feature_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [7, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  lbuilding_feature_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  stripmall_feature_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+
+  # Warehouse feature profile: comfort_violation only on Office_temperature.
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+  warehouse_feature_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  restaurant_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  restaurant_from_office_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  restaurant_from_lbuilding_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  restaurant_from_stripmall_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  office_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [7, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  office_from_lbuilding_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  lbuilding_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  lbuilding_from_office_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  stripmall_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  warehouse_continue_transfer:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+
+  # ============================================================
+  # Baseline profiles (building-specific obs, no LSTM)
+  # ============================================================
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  restaurant_scratch_baseline:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - normalize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Dining_temperature
+        - Kitchen_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Dining_C_setpoint, Kitchen_C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  office_scratch_baseline:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - normalize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      - occupancy_fraction
+      - Z1C_setpoint
+      - Z2C_setpoint
+      - Z3C_setpoint
+      - Z4C_setpoint
+      - Z5C_setpoint
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  lbuilding_scratch_baseline:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - normalize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+        - Z6_temperature
+        - Z7_temperature
+        - Z8_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      - occupancy_fraction
+      - Z1C_setpoint
+      - Z2C_setpoint
+      - Z3C_setpoint
+      - Z4C_setpoint
+      - Z5C_setpoint
+      - Z6C_setpoint
+      - Z7C_setpoint
+      - Z8C_setpoint
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  stripmall_scratch_baseline:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - normalize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+        - Z6_temperature
+        - Z7_temperature
+        - Z8_temperature
+        - Z9_temperature
+        - Z10_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      - occupancy_fraction
+      - Z1C_setpoint
+      - Z2C_setpoint
+      - Z3C_setpoint
+      - Z4C_setpoint
+      - Z5C_setpoint
+      - Z6C_setpoint
+      - Z7C_setpoint
+      - Z8C_setpoint
+      - Z9C_setpoint
+      - Z10C_setpoint
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Warehouse native baseline: 3 zones (Office=people, FineStorage, BulkStorage=heating-only).
+  # Cooling setpoints exist for Office (23.9°C) and FineStorage (26.7°C) only — BulkStorage
+  # is heating-only so no Z*C_setpoint variable. zone_temperature_vars uses the 3 actual
+  # zone temps; padded to 10 via duplicate mode.
+  warehouse_scratch_baseline:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - normalize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Office_temperature
+        - FineStorage_temperature
+        - BulkStorage_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      - occupancy_fraction
+      - Office_C_setpoint
+      - FineStorage_C_setpoint
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  restaurant_price_baseline:
+    datetime: true
+    day_of_week: true
+    price_forecast:
+      horizon: 12
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+
+  # ============================================================
+  # Duplicate padding profiles (building-specific obs, physical norm)
+  # ============================================================
+
+  # Strip Mall duplicate padding (SM as target, from Office/LB/Restaurant)
+  # Duplicate padding FROM Strip Mall (SM as source, target Office/LB/Restaurant)
+  # Duplicate padding FROM Restaurant (target Office/LB) + TO Restaurant (from Office/LB)
+
+  # === Discrete(2) variants — bang-bang TES setpoint {6.0, 12.0} ===
+  # Used for buildings where continuous Gaussian PPO can't escape "always 12" basin
+  # (Restaurant, Warehouse — verified via HP sweep 2026-05-05).
+
+  restaurant_scratch_baseline_d3:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Dining_temperature
+        - Kitchen_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Dining_C_setpoint, Kitchen_C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  restaurant_feature_transfer_d3:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  warehouse_scratch_baseline_d3:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Office_temperature
+        - FineStorage_temperature
+        - BulkStorage_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      - occupancy_fraction
+      - Office_C_setpoint
+      - FineStorage_C_setpoint
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  warehouse_sac_continuous:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # PPO + Discrete(2) {5°C, 12°C} — see office_ppo_d2_lstm comment block.
+  warehouse_ppo_d2_lstm:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  warehouse_sac_continuous_oracle:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - oracle_load_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_warehouse_observation_dataset/observations_processed.csv
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  warehouse_sac_continuous_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - occupancy_fraction
+        - outdoor_temperature
+        - outdoor_humidity
+        - Office_temperature
+        - FineStorage_temperature
+        - BulkStorage_temperature
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # MediumOffice (15 conditioned zones) — LSTM-based TLD-RL obs profile.
+  # zone_padding variant NOT created (15 > max_zones=10).
+  # Added 2026-05-29 for SMUD + SAC pretrain only.
+  mediumoffice_sac_continuous:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # MO 48-dim (2026-06-06): v3c LSTM + DBT forecast only (SM ablation winner).
+  mediumoffice_sac_continuous_v3_dbt:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      # 2026-06-24: the v3c predictor (seq_len 96) no longer exists; point to the
+      # standard H=12 predictor (seq_len 24) so mediumoffice matches the other five
+      # buildings. The checkpoint carries its own input_variables/seq_len.
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm.pt
+      horizon: 12
+      seq_len: 24
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # MO TLD-RL+ (2026-06-06): v3c LSTM + transferable state extras (occ/outdoor/weather-fc).
+  mediumoffice_sac_continuous_v3_plus:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      # 2026-06-24: the v3c predictor (seq_len 96) no longer exists; point to the
+      # standard H=12 predictor (seq_len 24) so mediumoffice matches the other five
+      # buildings. The checkpoint carries its own input_variables/seq_len.
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm.pt
+      horizon: 12
+      seq_len: 24
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  retail_observation_export:
+    reduce_observation: [month, day_of_month]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+        - Direct Normal Radiation
+        - Diffuse Horizontal Radiation
+
+  retail_rbc_d2:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Z1C_setpoint, Z2C_setpoint, Z3C_setpoint, Z4C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  retail_sac_continuous_plus:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature]
+      occupied_hours: [6, 20]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/retail_4zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Quick-service restaurant (QS), the retail profiles with 2 zones: export profile
+  # for the predictor datasets, D(2) RBC profile, reduced-state profile on the
+  # fixed-setpoint-log predictor (zero-shot target cases pin rbclog). The comfort_violation
+  # entry is dropped by the keep list (not observed); the per-zone bands live in
+  # fastfood_reward_smud.
+  fastfood_observation_export:
+    reduce_observation: [month, day_of_month]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+        - Direct Normal Radiation
+        - Diffuse Horizontal Radiation
+
+  fastfood_rbc_d2:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Z1C_setpoint, Z2C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  fastfood_sac_continuous_plus:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature]
+      occupied_hours: [4, 23]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/fastfood_2zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+
+  # LSTM v3c variant (2026-06-06): seq_len 96 (24h history) + horizon 12 (focused).
+  # In-env R2 (det. RBC1 trace): mean 0.890 -> 0.929, h=12 0.795 -> 0.869 vs v1.
+  mediumoffice_sac_continuous_v3:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      # 2026-06-24: the v3c predictor (seq_len 96) no longer exists; point to the
+      # standard H=12 predictor (seq_len 24) so mediumoffice matches the other five
+      # buildings. The checkpoint carries its own input_variables/seq_len.
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm.pt
+      horizon: 12
+      seq_len: 24
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Oracle (perfect-forecast) variant — LSTM diagnostic upper bound.
+  mediumoffice_sac_continuous_oracle:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - oracle_load_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_mediumoffice_observation_dataset/seed_42/observations_processed.csv
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Diagnostic: TLD-RL profile but NO LSTM forecast (supervisory s¹ only, 24 features)
+  mediumoffice_sac_continuous_no_forecast:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # PPO + Discrete(2) {5°C, 12°C} — same as other 3 buildings.
+  mediumoffice_ppo_d2_lstm:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  warehouse_feature_transfer_d3:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+
+  # === D(3) variants for office + lbuilding (unified action space) ===
+
+  office_scratch_baseline_d3:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Z1C_setpoint, Z2C_setpoint, Z3C_setpoint, Z4C_setpoint, Z5C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  office_sac_continuous:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [7, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Diagnostic: Office TLD-RL profile but NO LSTM forecast (s¹ only, 24 features)
+  office_sac_continuous_no_forecast:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [7, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # PPO + Discrete(2) {5°C, 12°C} variant — diagnoses whether SAC continuous
+  # mode-collapse is the cause of native pretrain underperforming RBC under
+  # SMUD TOU (2026-05-31). Same LSTM-augmented supervisory state as
+  # office_sac_continuous; only action space is discretized.
+  # Memory [project-discrete-action-results] (Apr 30 2026): D(2) random init
+  # achieves -22% RBC gap via bang-bang coarse discretization.
+  office_ppo_d2_lstm:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  # Oracle (perfect-forecast) variant — LSTM diagnostic upper bound.
+  # Same supervisory state as office_sac_continuous, but oracle_load_forecast
+  # replaces load_predictor. Reveals whether LSTM prediction error is the
+  # source-domain bottleneck vs the supervisory-state info compression itself.
+  office_sac_continuous_oracle:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - oracle_load_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [7, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_office_observation_dataset/observations_processed.csv
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Zone-padding base (Kadamala 2025) — preserved for padding baseline comparison.
+  # Used by transfer_*_smud_sac_padding and bc_pretrain_*_smud_sac.
+  # E2E RL v3 (Jun 03 — paper Section 2.3): raw state s = [s¹, s²].
+  # Feeds the LSTM inputs (zone temps + outdoor T + humidity + occupancy) directly
+  # into the RL state in place of the LSTM g_theta_b. Paper: "single network maps raw state s_t to a_t".
+  office_sac_continuous_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [7, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        # s¹ HVAC-TES
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        # building-side block (same channels as the LSTM inputs)
+        - occupancy_fraction
+        - outdoor_temperature
+        - outdoor_humidity
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # === E2E RL raw state ===
+  # E2E state s_t = [s1_t (HVAC-TES), s2_t (building-side)]. TLD-RL compresses s2
+  # through the LSTM into the 12-step load forecast; E2E feeds all of s2 raw into the
+  # RL state. Zone temperatures are N per building (variable dimension: not
+  # transferable, but comparable on the source). Shared (s1 + s2) features below;
+  # zone temperatures are added inline per building.
+  reduce_observation: &e2e_raw_common
+    keep:
+      # s¹ HVAC-TES (fixed dim)
+      - CWtank_final
+      - CWtank_node1
+      - CWtank_node2
+      - CWtank_node3
+      - CWtank_node4
+      - CWtank_node5
+      - CWtank_node6
+      - CWtank_use_outlet
+      - chiller_status
+      - comfort_violation
+      - current_price
+      - CoolingRate
+      - price_forecast_1
+      - price_forecast_2
+      - price_forecast_3
+      - price_forecast_4
+      - price_forecast_5
+      - price_forecast_6
+      - price_forecast_7
+      - price_forecast_8
+      - price_forecast_9
+      - price_forecast_10
+      - price_forecast_11
+      - price_forecast_12
+      # s² building-side (excluding zone temps, added per-bldg inline)
+      - occupancy_fraction
+      - outdoor_temperature
+      - forecast_1_Dry Bulb Temperature
+      - forecast_2_Dry Bulb Temperature
+      - forecast_3_Dry Bulb Temperature
+      - forecast_4_Dry Bulb Temperature
+      - forecast_5_Dry Bulb Temperature
+      - forecast_6_Dry Bulb Temperature
+      - forecast_7_Dry Bulb Temperature
+      - forecast_8_Dry Bulb Temperature
+      - forecast_9_Dry Bulb Temperature
+      - forecast_10_Dry Bulb Temperature
+      - forecast_11_Dry Bulb Temperature
+      - forecast_12_Dry Bulb Temperature
+      - forecast_1_Relative Humidity
+      - forecast_2_Relative Humidity
+      - forecast_3_Relative Humidity
+      - forecast_4_Relative Humidity
+      - forecast_5_Relative Humidity
+      - forecast_6_Relative Humidity
+      - forecast_7_Relative Humidity
+      - forecast_8_Relative Humidity
+      - forecast_9_Relative Humidity
+      - forecast_10_Relative Humidity
+      - forecast_11_Relative Humidity
+      - forecast_12_Relative Humidity
+
+  # MediumOffice SAC E2E (zone-padded) — added Jun 02 for Phase B (TLD-RL vs E2E)
+  mediumoffice_sac_continuous_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - occupancy_fraction
+        - outdoor_temperature
+        - outdoor_humidity
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+        - Z6_temperature
+        - Z7_temperature
+        - Z8_temperature
+        - Z9_temperature
+        - Z10_temperature
+        - Z11_temperature
+        - Z12_temperature
+        - Z13_temperature
+        - Z14_temperature
+        - Z15_temperature
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  office_feature_transfer_d3:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  lbuilding_scratch_baseline_d3:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Z1C_setpoint, Z2C_setpoint, Z3C_setpoint, Z4C_setpoint, Z5C_setpoint, Z6C_setpoint, Z7C_setpoint, Z8C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  lbuilding_sac_continuous:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Diagnostic: LB TLD-RL profile but NO LSTM forecast (s¹ only, 24 features)
+  lbuilding_sac_continuous_no_forecast:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # PPO + Discrete(2) {5°C, 12°C} — see office_ppo_d2_lstm comment block.
+  lbuilding_ppo_d2_lstm:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  lbuilding_sac_continuous_oracle:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - oracle_load_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_lbuilding_observation_dataset/observations_processed.csv
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  lbuilding_sac_continuous_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - occupancy_fraction
+        - outdoor_temperature
+        - outdoor_humidity
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+        - Z6_temperature
+        - Z7_temperature
+        - Z8_temperature
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  lbuilding_feature_transfer_d3:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  # === StripMall variants (10 actual zones — no padding needed but kept for shape consistency) ===
+  stripmall_scratch_baseline_d3:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Z1C_setpoint, Z2C_setpoint, Z3C_setpoint, Z4C_setpoint, Z5C_setpoint, Z6C_setpoint, Z7C_setpoint, Z8C_setpoint, Z9C_setpoint, Z10C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  stripmall_sac_continuous:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # E2E (Scratch) raw-state profile, unified 2026-06-24 to match the other buildings:
+  # the raw zone temperatures Z1..Z10 replace the load forecast (keep-list, no
+  # zone_padding), so it is the paper's E2E baseline (62 - 12 load_forecast + 10
+  # zones = 60-d), consistent in construction with office_e2e (55) etc.
+  stripmall_sac_continuous_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+        - Z6_temperature
+        - Z7_temperature
+        - Z8_temperature
+        - Z9_temperature
+        - Z10_temperature
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - occupancy_fraction
+        - outdoor_temperature
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  stripmall_feature_transfer_d3:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm.pt
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  # Oracle (perfect forecast) variants — diagnostic upper bound for Feature pretrain
+  restaurant_feature_oracle:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor: null
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_restaurant_observation_dataset/observations_processed.csv
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  office_feature_oracle:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor: null
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_office_observation_dataset/observations_processed.csv
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  lbuilding_feature_oracle:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor: null
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_lbuilding_observation_dataset/observations_processed.csv
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  warehouse_feature_oracle:
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor: null
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_warehouse_observation_dataset/observations_processed.csv
+      horizon: 12
+    csv_features: null
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    reduce_observation: *proposed_27dim
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  # --- E2E scratch (Kadamala zone-padding baseline) for paper comparison plot ---
+  # The paper's E2E scratch baseline: zone_padding wrapper in place of the LSTM. Minimum features.
+  # TLD-RL (LSTM) vs E2E scratch (zone_padded) - main method vs baseline.
+  office_ppo_d2_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Z1C_setpoint, Z2C_setpoint, Z3C_setpoint, Z4C_setpoint, Z5C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  lbuilding_ppo_d2_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Z1C_setpoint, Z2C_setpoint, Z3C_setpoint, Z4C_setpoint, Z5C_setpoint, Z6C_setpoint, Z7C_setpoint, Z8C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  warehouse_ppo_d2_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 10
+      padding_mode: duplicate
+      zone_temperature_vars: [Office_temperature]
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Office_C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  mediumoffice_ppo_d2_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+      - discretize_action
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 15
+      padding_mode: duplicate
+      zone_temperature_vars: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+    logger: true
+    csv_logger: true
+    reduce_observation: [occupancy_fraction, Z1C_setpoint, Z2C_setpoint, Z3C_setpoint, Z4C_setpoint, Z5C_setpoint, Z6C_setpoint, Z7C_setpoint, Z8C_setpoint, Z9C_setpoint, Z10C_setpoint, Z11C_setpoint, Z12C_setpoint, Z13C_setpoint, Z14C_setpoint, Z15C_setpoint]
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+    discretize_action:
+      n: 2
+      values: [5.0, 10.0]
+
+  restaurant_sac_continuous:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  restaurant_sac_continuous_e2e:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - occupancy_fraction
+        - outdoor_temperature
+        - Dining_temperature
+        - Kitchen_temperature
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  restaurant_sac_continuous_no_forecast:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [11, 22]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  stripmall_sac_continuous_no_forecast:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Reduced-state layout identical to the four original buildings; the source
+  # role pins the fixed-setpoint-log predictor (zero-shot target cases pin rbclog).
+  stripmall_sac_continuous_plus:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [6, 20]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Weather-forecast ablation (abl_dbt, 2026-06-06): screening, seed-42 only.
+  stripmall_sac_continuous_abl_dbt:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Weather-forecast ablation (abl_rh, 2026-06-06): screening, seed-42 only.
+  stripmall_sac_continuous_abl_rh:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Weather-forecast ablation (abl_wfc, 2026-06-06): screening, seed-42 only.
+  stripmall_sac_continuous_abl_wfc:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # TLD-RL+ 62-dim (2026-06-06 promotion): 36 + occ/outdoor/weather-fc.
+  office_sac_continuous_plus:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [7, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # TLD-RL+ 62-dim (2026-06-06 promotion): 36 + occ/outdoor/weather-fc.
+  lbuilding_sac_continuous_plus:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # TLD-RL+ 62-dim (2026-06-06 promotion): 36 + occ/outdoor/weather-fc.
+  warehouse_sac_continuous_plus:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Reduced-state keep-list identical to the four original buildings. The source
+  # role pins the fixed-setpoint-log predictor; zero-shot target cases pin
+  # *_lstm_rbclog.pt.
+  restaurant_sac_continuous_plus:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - load_predictor
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Dining_temperature, Kitchen_temperature]
+      occupied_hours: [10, 21]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm.pt
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - load_forecast_1
+        - load_forecast_2
+        - load_forecast_3
+        - load_forecast_4
+        - load_forecast_5
+        - load_forecast_6
+        - load_forecast_7
+        - load_forecast_8
+        - load_forecast_9
+        - load_forecast_10
+        - load_forecast_11
+        - load_forecast_12
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  # Padding baseline (Kadamala DP40d) profile — added 2026-06-07 (design Part 2).
+  # = E2E info set with raw zone temps replaced by zone_slot_1..10
+  # (ZonePaddingWrapper, duplicate mode) → 60-dim building-invariant.
+  # NOTE: E2E has no load_forecast either — info parity is exact.
+  # ============================================================
+  # Padding (Kadamala 2025) profiles — max_zones=15, ALL 5 buildings
+  # (option a, 2026-06-27). Identical keep-list (50 non-zone + zone_slot_1..15)
+  # across buildings for transfer invariance; only comfort_violation +
+  # zone_temperature_vars differ. Padded dim = 65.
+  # ============================================================
+
+  office_sac_continuous_padded:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature]
+      occupied_hours: [7, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 15
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+        - zone_slot_1_temperature
+        - zone_slot_2_temperature
+        - zone_slot_3_temperature
+        - zone_slot_4_temperature
+        - zone_slot_5_temperature
+        - zone_slot_6_temperature
+        - zone_slot_7_temperature
+        - zone_slot_8_temperature
+        - zone_slot_9_temperature
+        - zone_slot_10_temperature
+        - zone_slot_11_temperature
+        - zone_slot_12_temperature
+        - zone_slot_13_temperature
+        - zone_slot_14_temperature
+        - zone_slot_15_temperature
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  lbuilding_sac_continuous_padded:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature]
+      occupied_hours: [8, 18]
+      t_min: 18.0
+      t_max: 22.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 15
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+        - Z6_temperature
+        - Z7_temperature
+        - Z8_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+        - zone_slot_1_temperature
+        - zone_slot_2_temperature
+        - zone_slot_3_temperature
+        - zone_slot_4_temperature
+        - zone_slot_5_temperature
+        - zone_slot_6_temperature
+        - zone_slot_7_temperature
+        - zone_slot_8_temperature
+        - zone_slot_9_temperature
+        - zone_slot_10_temperature
+        - zone_slot_11_temperature
+        - zone_slot_12_temperature
+        - zone_slot_13_temperature
+        - zone_slot_14_temperature
+        - zone_slot_15_temperature
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  warehouse_sac_continuous_padded:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 15
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Office_temperature
+        - FineStorage_temperature
+        - BulkStorage_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+        - zone_slot_1_temperature
+        - zone_slot_2_temperature
+        - zone_slot_3_temperature
+        - zone_slot_4_temperature
+        - zone_slot_5_temperature
+        - zone_slot_6_temperature
+        - zone_slot_7_temperature
+        - zone_slot_8_temperature
+        - zone_slot_9_temperature
+        - zone_slot_10_temperature
+        - zone_slot_11_temperature
+        - zone_slot_12_temperature
+        - zone_slot_13_temperature
+        - zone_slot_14_temperature
+        - zone_slot_15_temperature
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  mediumoffice_sac_continuous_padded:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - zone_padding
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature, Z11_temperature, Z12_temperature, Z13_temperature, Z14_temperature, Z15_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    zone_padding:
+      max_zones: 15
+      padding_mode: duplicate
+      zone_temperature_vars:
+        - Z1_temperature
+        - Z2_temperature
+        - Z3_temperature
+        - Z4_temperature
+        - Z5_temperature
+        - Z6_temperature
+        - Z7_temperature
+        - Z8_temperature
+        - Z9_temperature
+        - Z10_temperature
+        - Z11_temperature
+        - Z12_temperature
+        - Z13_temperature
+        - Z14_temperature
+        - Z15_temperature
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_use_outlet
+        - chiller_status
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+        - outdoor_temperature
+        - outdoor_humidity
+        - forecast_1_Dry Bulb Temperature
+        - forecast_2_Dry Bulb Temperature
+        - forecast_3_Dry Bulb Temperature
+        - forecast_4_Dry Bulb Temperature
+        - forecast_5_Dry Bulb Temperature
+        - forecast_6_Dry Bulb Temperature
+        - forecast_7_Dry Bulb Temperature
+        - forecast_8_Dry Bulb Temperature
+        - forecast_9_Dry Bulb Temperature
+        - forecast_10_Dry Bulb Temperature
+        - forecast_11_Dry Bulb Temperature
+        - forecast_12_Dry Bulb Temperature
+        - forecast_1_Relative Humidity
+        - forecast_2_Relative Humidity
+        - forecast_3_Relative Humidity
+        - forecast_4_Relative Humidity
+        - forecast_5_Relative Humidity
+        - forecast_6_Relative Humidity
+        - forecast_7_Relative Humidity
+        - forecast_8_Relative Humidity
+        - forecast_9_Relative Humidity
+        - forecast_10_Relative Humidity
+        - forecast_11_Relative Humidity
+        - forecast_12_Relative Humidity
+        - zone_slot_1_temperature
+        - zone_slot_2_temperature
+        - zone_slot_3_temperature
+        - zone_slot_4_temperature
+        - zone_slot_5_temperature
+        - zone_slot_6_temperature
+        - zone_slot_7_temperature
+        - zone_slot_8_temperature
+        - zone_slot_9_temperature
+        - zone_slot_10_temperature
+        - zone_slot_11_temperature
+        - zone_slot_12_temperature
+        - zone_slot_13_temperature
+        - zone_slot_14_temperature
+        - zone_slot_15_temperature
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+
+  stripmall_sac_continuous_oracle:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - oracle_load_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Z1_temperature, Z2_temperature, Z3_temperature, Z4_temperature, Z5_temperature, Z6_temperature, Z7_temperature, Z8_temperature, Z9_temperature, Z10_temperature]
+      occupied_hours: [8, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    oracle_load_forecast:
+      csv_path: artifacts/case_study/exports/build_stripmall_observation_dataset/seed_42/observations_processed.csv
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation: *proposed_27dim
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+  warehouse_sac_continuous_no_forecast:
+    order:
+      - day_of_week
+      - datetime
+      - chiller_status
+      - comfort_violation
+      - weather_forecast
+      - price_forecast
+      - logger
+      - csv_logger
+      - reduce_observation
+      - physical_normalize_observation
+      - physical_normalize_reward
+    datetime: true
+    day_of_week: true
+    chiller_status: true
+    comfort_violation:
+      temperature_variables: [Office_temperature]
+      occupied_hours: [7, 18]
+      t_min: 22.0
+      t_max: 26.0
+      exclude_days: [5, 6]
+    weather_forecast:
+      horizon: 12
+      columns:
+        - Dry Bulb Temperature
+        - Relative Humidity
+    price_forecast:
+      horizon: 12
+    logger: true
+    csv_logger: true
+    reduce_observation:
+      keep:
+        - CWtank_final
+        - CWtank_node1
+        - CWtank_node2
+        - CWtank_node3
+        - CWtank_node4
+        - CWtank_node5
+        - CWtank_node6
+        - CWtank_use_outlet
+        - chiller_status
+        - comfort_violation
+        - current_price
+        - CoolingRate
+        - price_forecast_1
+        - price_forecast_2
+        - price_forecast_3
+        - price_forecast_4
+        - price_forecast_5
+        - price_forecast_6
+        - price_forecast_7
+        - price_forecast_8
+        - price_forecast_9
+        - price_forecast_10
+        - price_forecast_11
+        - price_forecast_12
+    physical_normalize_observation: true
+    physical_normalize_reward: true
+    normalize_action: false
+
+training_profiles:
+  # PPO replication: SB3 PPO defaults except
+  # gamma 0.995 and 2x256 ReLU pi/vf (SAC-sized networks). The cases add the
+  # normalize_action wrapper so PPO acts in [-1, 1] (SAC rescales internally).
+  # Ten seasons, deterministic evaluation after every season.
+  episodes_10_ppo_cont:
+    episodes: 10
+    algorithm: ppo
+    evaluation:
+      enabled: true
+      n_eval_episodes: 1
+      eval_freq_episodes: 1
+      deterministic: true
+    model_kwargs:
+      learning_rate: 0.0003
+      n_steps: 2048
+      batch_size: 64
+      n_epochs: 10
+      gamma: 0.995
+      gae_lambda: 0.95
+      clip_range: 0.2
+      ent_coef: 0.0
+      vf_coef: 0.5
+      max_grad_norm: 0.5
+    policy_kwargs:
+      net_arch:
+        pi: [256, 256]
+        vf: [256, 256]
+      activation_fn: ReLU
+      log_std_init: 0.0
+  episodes_1_dataset:
+    episodes: 1
+    evaluation:
+      enabled: false
+
+  episodes_15_with_eval:
+    episodes: 30
+    evaluation:
+      enabled: false
+
+
+  episodes_50_with_eval:
+    episodes: 2   # 2026-06-25: RBC is deterministic, 1-2 episodes suffice (was 30, redundant compute)
+    evaluation:
+      enabled: false
+
+  episodes_15_continue:
+    # Bumped 20 → 30 for transfer parity with pretrain.
+    episodes: 30
+    reset_num_timesteps: false
+    learn_kwargs:
+      reset_num_timesteps: false
+    evaluation:
+      enabled: false
+
+  episodes_15_training:
+    # Bumped 20 → 30 for transfer/scratch parity with pretrain.
+    episodes: 30
+    evaluation:
+      enabled: false
+
+  timesteps_32000_continue:
+    total_timesteps: 32000
+    reset_num_timesteps: false
+    learn_kwargs:
+      reset_num_timesteps: false
+
+  timesteps_50000_continue:
+    total_timesteps: 50000
+    reset_num_timesteps: false
+    learn_kwargs:
+      reset_num_timesteps: false
+
+  timesteps_32000_training:
+    total_timesteps: 32000
+
+  timesteps_50000_training:
+    total_timesteps: 50000
+
+  episodes_10_sac:
+    episodes: 10
+    algorithm: sac
+    evaluation:
+      enabled: true
+      n_eval_episodes: 1
+      eval_freq_episodes: 1   # 2026-06-25: per-episode deterministic eval+best_model checkpoint (5-building pipeline)
+      deterministic: true
+    model_kwargs:
+      learning_rate: 3.0e-4
+      batch_size: 256
+      buffer_size: 100000
+      learning_starts: 1000
+      tau: 0.005
+      gamma: 0.995
+      train_freq: 1
+      gradient_steps: 1
+      ent_coef: auto
+
+  episodes_5_sac:
+    episodes: 5
+    algorithm: sac
+    evaluation:
+      enabled: true
+      n_eval_episodes: 1
+      eval_freq_episodes: 1   # 2026-06-25: per-episode deterministic eval+best_model checkpoint (5-building pipeline)
+      deterministic: true
+    model_kwargs:
+      learning_rate: 3.0e-4
+      batch_size: 256
+      buffer_size: 100000
+      learning_starts: 1000
+      tau: 0.005
+      gamma: 0.995
+      train_freq: 1
+      gradient_steps: 1
+      ent_coef: auto
+
+  episodes_1_eval_sac:
+    episodes: 1
+    algorithm: sac
+    evaluation:
+      enabled: true
+      n_eval_episodes: 1
+      eval_freq_episodes: 1   # 2026-06-25: per-episode deterministic eval+best_model checkpoint (5-building pipeline)
+      deterministic: true
+    model_kwargs:
+      learning_rate: 3.0e-4
+      batch_size: 256
+      buffer_size: 100000
+      learning_starts: 1000
+      tau: 0.005
+      gamma: 0.995
+      train_freq: 1
+      gradient_steps: 1
+      ent_coef: auto
+
+  # PPO + Discrete(2) variant — same step budget as episodes_10_sac (10 ep
+  # = 117K step) for fair vs SAC continuous comparison. PPO categorical
+  # policy handles bang-bang TES TOU naturally; SB3 defaults except gamma
+  # matched to SAC profile. ent_coef=0.01 kept for exploration without
+  # collapsing to single action.
+  episodes_10_ppo_d2:
+    episodes: 10
+    algorithm: ppo
+    evaluation:
+      enabled: true
+      n_eval_episodes: 1
+      eval_freq_episodes: 2
+      deterministic: true
+    model_kwargs:
+      learning_rate: 3.0e-4
+      n_steps: 2048
+      batch_size: 64
+      n_epochs: 10
+      gamma: 0.995
+      gae_lambda: 0.95
+      clip_range: 0.2
+      ent_coef: 0.01
+      vf_coef: 0.5
+      max_grad_norm: 0.5
+
+export_profiles:
+  dataset_flat_export:
+    profile: flat_export
+    overwrite: true
+    preprocess:
+      observations: observations.csv
+      infos: infos.csv
+      out: observations_processed.csv
+      n_steps: 96
+
+  model_flat_export:
+    profile: flat_export
+    overwrite: true
+
+  transfer_workspace_export:
+    profile: workspace_export
+    overwrite: true
+    snapshot_selectors: [first, penultimate, last]
+
+cleanup_policies:
+  retain_recent_three:
+    # 2026-06-27: retain_success 3->8 for the 5-seed pipeline. extract_paper_tables.py
+    # reads each seed's EVAL workspace (workspaces/<case>/*/*_EVAL_*-res1/progress.csv);
+    # with retain<5 the built-in per-seed cleanup rmtree'd the 2 oldest seed workspaces,
+    # breaking seeded_stats(). 8 covers 5 seeds + retries. The batch launcher owns disk
+    # (strips heavy EnergyPlus output per case, keeps progress.csv). Backup:
+    # scratchpad/recipes_pre_retain_edit.yaml
+    retain_success: 8
+    retain_failure: 3
+
+figure_styles:
+  paper_default:
+    figsize: [10, 6]
+    grid_alpha: 0.3

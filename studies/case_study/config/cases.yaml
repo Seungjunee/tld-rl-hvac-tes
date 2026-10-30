@@ -1,0 +1,2707 @@
+# Case study configuration (TLD-RL paper).
+# Four-building matrix (OF/LB/WH/MO): RBC, E2E (sac_e2e), Padding (sacp_e2e source +
+# padrl fine-tuning / padff frozen-feature fine-tuning), TLD-RL (sac_plus + zs).
+# Further commercial buildings (RE/SM/RT/QS): zero-shot targets of the four sources.
+# PPO replication (__r1ppo) and comfort-weighted reward (__r1cw<k>) arms.
+cases:
+- id: build_office_observation_dataset
+  stage: dataset
+  building: office_5zone
+  method: scratch_baseline
+  training_profile: episodes_1_dataset
+  observation_profile: office_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model
+- id: build_lbuilding_observation_dataset
+  stage: dataset
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  training_profile: episodes_1_dataset
+  observation_profile: lbuilding_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model
+- id: build_warehouse_observation_dataset
+  stage: dataset
+  building: warehouse_3zone
+  method: scratch_baseline
+  training_profile: episodes_1_dataset
+  observation_profile: warehouse_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model
+# RBC-logged predictor dataset (2026-07-13): same export profile as the SAC-explore
+# dataset above, but the season is operated by the paper's incumbent rbc_tou
+# controller. Used to check log-controller invariance of the load predictor
+# (paper claim: predictor fits on passively logged operation).
+- id: build_office_observation_dataset_rbc
+  stage: dataset
+  building: office_5zone
+  method: rbc_tou
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_dataset
+  observation_profile: office_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model_rbc
+- id: build_lbuilding_observation_dataset_rbc
+  stage: dataset
+  building: office_lbuilding_8zone
+  method: rbc_tou
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_dataset
+  observation_profile: lbuilding_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model_rbc
+- id: build_warehouse_observation_dataset_rbc
+  stage: dataset
+  building: warehouse_3zone
+  method: rbc_tou
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_dataset
+  observation_profile: warehouse_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model_rbc
+- id: build_mediumoffice_observation_dataset_rbc
+  stage: dataset
+  building: mediumoffice_15zone
+  method: rbc_tou
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_dataset
+  observation_profile: mediumoffice_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model_rbc
+- id: rbc_office_smud_tou
+  stage: baseline
+  building: office_5zone
+  method: rbc_tou
+  reward_profile: office_reward_smud
+  training_profile: episodes_50_with_eval
+  observation_profile: office_scratch_baseline_d3
+  export_profile: model_flat_export
+  outputs:
+    model_name: model_rbc
+- id: rbc_lbuilding_smud_tou
+  stage: baseline
+  building: office_lbuilding_8zone
+  method: rbc_tou
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_50_with_eval
+  observation_profile: lbuilding_scratch_baseline_d3
+  export_profile: model_flat_export
+  outputs:
+    model_name: model_rbc
+- id: rbc_warehouse_smud_tou
+  stage: baseline
+  building: warehouse_3zone
+  method: rbc_tou
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_50_with_eval
+  observation_profile: warehouse_scratch_baseline_d3
+  export_profile: model_flat_export
+  outputs:
+    model_name: model_rbc
+- id: rbc_mediumoffice_smud_tou
+  stage: baseline
+  building: mediumoffice_15zone
+  method: rbc_tou
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_50_with_eval
+  observation_profile: mediumoffice_observation_export
+  export_profile: model_flat_export
+  outputs:
+    model_name: model_rbc
+- id: build_mediumoffice_observation_dataset
+  stage: dataset
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  training_profile: episodes_1_dataset
+  observation_profile: mediumoffice_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model
+- id: pretrain_office_smud_sac_e2e
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_e2e
+  export_profile: model_flat_export
+  training: &id001
+    algorithm: sac
+    model_kwargs:
+      learning_rate: 0.0003
+      batch_size: 256
+      buffer_size: 100000
+      learning_starts: 1000
+      tau: 0.005
+      gamma: 0.995
+      train_freq: 1
+      gradient_steps: 1
+      ent_coef: auto
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sac_e2e
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_e2e
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sac_e2e
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_e2e
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_mediumoffice_smud_sac_e2e
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_e2e
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_office_smud_sac_plus
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sac_plus
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sac_plus
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_mediumoffice_smud_sac_plus
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: transfer_office_to_lbuilding_smud_sacp_zs
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: tldrl_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_mediumoffice_smud_sacp_zs
+  stage: transfer
+  building: mediumoffice_15zone
+  method: tldrl_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_warehouse_smud_sacp_zs
+  stage: transfer
+  building: warehouse_3zone
+  method: tldrl_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_office_smud_sacp_zs
+  stage: transfer
+  building: office_5zone
+  method: tldrl_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_mediumoffice_smud_sacp_zs
+  stage: transfer
+  building: mediumoffice_15zone
+  method: tldrl_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_warehouse_smud_sacp_zs
+  stage: transfer
+  building: warehouse_3zone
+  method: tldrl_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_office_smud_sacp_zs
+  stage: transfer
+  building: office_5zone
+  method: tldrl_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_lbuilding_smud_sacp_zs
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: tldrl_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_warehouse_smud_sacp_zs
+  stage: transfer
+  building: warehouse_3zone
+  method: tldrl_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_office_smud_sacp_zs
+  stage: transfer
+  building: office_5zone
+  method: tldrl_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_lbuilding_smud_sacp_zs
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: tldrl_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_mediumoffice_smud_sacp_zs
+  stage: transfer
+  building: mediumoffice_15zone
+  method: tldrl_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: pretrain_office_smud_sacp_e2e
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sacp_e2e
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sacp_e2e
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: transfer_office_to_lbuilding_smud_sacp_padrl
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_transfer
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e
+  training: &id002
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_office_to_warehouse_smud_sacp_padrl
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_transfer
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e
+  training: *id002
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_lbuilding_to_office_smud_sacp_padrl
+  stage: transfer
+  building: office_5zone
+  method: padding_transfer
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e
+  training: *id002
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_lbuilding_to_warehouse_smud_sacp_padrl
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_transfer
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e
+  training: *id002
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_warehouse_to_office_smud_sacp_padrl
+  stage: transfer
+  building: office_5zone
+  method: padding_transfer
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e
+  training: *id002
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_warehouse_to_lbuilding_smud_sacp_padrl
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_transfer
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e
+  training: *id002
+  outputs:
+    model_name: model_padding_transferred
+- id: pretrain_mediumoffice_smud_sacp_e2e
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: model_flat_export
+  training:
+    algorithm: sac
+    model_kwargs:
+      learning_rate: 0.0003
+      batch_size: 256
+      buffer_size: 100000
+      learning_starts: 1000
+      tau: 0.005
+      gamma: 0.995
+      train_freq: 1
+      gradient_steps: 1
+      ent_coef: auto
+  outputs:
+    model_name: model
+- id: transfer_mediumoffice_to_office_smud_sacp_padrl
+  stage: transfer
+  building: office_5zone
+  method: padding_transfer
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_mediumoffice_to_lbuilding_smud_sacp_padrl
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_transfer
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_mediumoffice_to_warehouse_smud_sacp_padrl
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_transfer
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_office_to_mediumoffice_smud_sacp_padrl
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_transfer
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_lbuilding_to_mediumoffice_smud_sacp_padrl
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_transfer
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_transferred
+- id: transfer_warehouse_to_mediumoffice_smud_sacp_padrl
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_transfer
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADRL_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_transferred
+# ---- Further commercial buildings: RE (restaurant_3zone), SM (stripmall_10zone),
+# RT (retail_4zone) and QS (fastfood_2zone) as zero-shot targets of the four
+# source policies. Operation-log datasets (fixed-setpoint and RBC), RBC baselines
+# and the 16 zero-shot pairs. Each target predictor is refit on the target's
+# RBC-operated log (<tag>_lstm_rbclog.pt); the source policy is reused frozen.
+- id: build_restaurant_observation_dataset
+  stage: dataset
+  building: restaurant_3zone
+  method: scratch_baseline
+  training_profile: episodes_1_dataset
+  observation_profile: restaurant_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model
+- id: build_stripmall_observation_dataset
+  stage: dataset
+  building: stripmall_10zone
+  method: scratch_baseline
+  training_profile: episodes_1_dataset
+  observation_profile: stripmall_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model
+- id: build_retail_observation_dataset
+  stage: dataset
+  building: retail_4zone
+  method: scratch_baseline
+  training_profile: episodes_1_dataset
+  observation_profile: retail_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model
+- id: build_fastfood_observation_dataset
+  stage: dataset
+  building: fastfood_2zone
+  method: scratch_baseline
+  training_profile: episodes_1_dataset
+  observation_profile: fastfood_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model
+- id: build_restaurant_observation_dataset_rbc
+  stage: dataset
+  building: restaurant_3zone
+  method: rbc_tou
+  reward_profile: restaurant_reward_smud
+  training_profile: episodes_1_dataset
+  observation_profile: restaurant_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model_rbc
+- id: build_stripmall_observation_dataset_rbc
+  stage: dataset
+  building: stripmall_10zone
+  method: rbc_tou
+  reward_profile: stripmall_reward_smud
+  training_profile: episodes_1_dataset
+  observation_profile: stripmall_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model_rbc
+- id: build_retail_observation_dataset_rbc
+  stage: dataset
+  building: retail_4zone
+  method: rbc_tou
+  reward_profile: retail_reward_smud
+  training_profile: episodes_1_dataset
+  observation_profile: retail_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model_rbc
+- id: build_fastfood_observation_dataset_rbc
+  stage: dataset
+  building: fastfood_2zone
+  method: rbc_tou
+  reward_profile: fastfood_reward_smud
+  training_profile: episodes_1_dataset
+  observation_profile: fastfood_observation_export
+  export_profile: dataset_flat_export
+  outputs:
+    model_name: model_rbc
+- id: rbc_restaurant_smud_tou
+  stage: baseline
+  building: restaurant_3zone
+  method: rbc_tou
+  reward_profile: restaurant_reward_smud
+  training_profile: episodes_50_with_eval
+  observation_profile: restaurant_scratch_baseline_d3
+  export_profile: model_flat_export
+  outputs:
+    model_name: model_rbc
+- id: rbc_stripmall_smud_tou
+  stage: baseline
+  building: stripmall_10zone
+  method: rbc_tou
+  reward_profile: stripmall_reward_smud
+  training_profile: episodes_50_with_eval
+  observation_profile: stripmall_scratch_baseline_d3
+  export_profile: model_flat_export
+  outputs:
+    model_name: model_rbc
+- id: rbc_retail_smud_tou
+  stage: baseline
+  building: retail_4zone
+  method: rbc_tou
+  reward_profile: retail_reward_smud
+  training_profile: episodes_50_with_eval
+  observation_profile: retail_rbc_d2
+  export_profile: model_flat_export
+  outputs:
+    model_name: model_rbc
+- id: rbc_fastfood_smud_tou
+  stage: baseline
+  building: fastfood_2zone
+  method: rbc_tou
+  reward_profile: fastfood_reward_smud
+  training_profile: episodes_50_with_eval
+  observation_profile: fastfood_rbc_d2
+  export_profile: model_flat_export
+  outputs:
+    model_name: model_rbc
+- id: transfer_office_to_restaurant_smud_sacp_zs
+  stage: transfer
+  building: restaurant_3zone
+  method: tldrl_zs
+  reward_profile: restaurant_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: restaurant_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_stripmall_smud_sacp_zs
+  stage: transfer
+  building: stripmall_10zone
+  method: tldrl_zs
+  reward_profile: stripmall_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: stripmall_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_retail_smud_sacp_zs
+  stage: transfer
+  building: retail_4zone
+  method: tldrl_zs
+  reward_profile: retail_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: retail_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/retail_4zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_fastfood_smud_sacp_zs
+  stage: transfer
+  building: fastfood_2zone
+  method: tldrl_zs
+  reward_profile: fastfood_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: fastfood_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/fastfood_2zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_restaurant_smud_sacp_zs
+  stage: transfer
+  building: restaurant_3zone
+  method: tldrl_zs
+  reward_profile: restaurant_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: restaurant_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_stripmall_smud_sacp_zs
+  stage: transfer
+  building: stripmall_10zone
+  method: tldrl_zs
+  reward_profile: stripmall_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: stripmall_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_retail_smud_sacp_zs
+  stage: transfer
+  building: retail_4zone
+  method: tldrl_zs
+  reward_profile: retail_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: retail_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/retail_4zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_fastfood_smud_sacp_zs
+  stage: transfer
+  building: fastfood_2zone
+  method: tldrl_zs
+  reward_profile: fastfood_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: fastfood_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/fastfood_2zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_restaurant_smud_sacp_zs
+  stage: transfer
+  building: restaurant_3zone
+  method: tldrl_zs
+  reward_profile: restaurant_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: restaurant_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_stripmall_smud_sacp_zs
+  stage: transfer
+  building: stripmall_10zone
+  method: tldrl_zs
+  reward_profile: stripmall_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: stripmall_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_retail_smud_sacp_zs
+  stage: transfer
+  building: retail_4zone
+  method: tldrl_zs
+  reward_profile: retail_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: retail_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/retail_4zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_fastfood_smud_sacp_zs
+  stage: transfer
+  building: fastfood_2zone
+  method: tldrl_zs
+  reward_profile: fastfood_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: fastfood_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/fastfood_2zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_restaurant_smud_sacp_zs
+  stage: transfer
+  building: restaurant_3zone
+  method: tldrl_zs
+  reward_profile: restaurant_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: restaurant_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/restaurant_3zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_stripmall_smud_sacp_zs
+  stage: transfer
+  building: stripmall_10zone
+  method: tldrl_zs
+  reward_profile: stripmall_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: stripmall_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/stripmall_10zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_retail_smud_sacp_zs
+  stage: transfer
+  building: retail_4zone
+  method: tldrl_zs
+  reward_profile: retail_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: retail_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/retail_4zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_fastfood_smud_sacp_zs
+  stage: transfer
+  building: fastfood_2zone
+  method: tldrl_zs
+  reward_profile: fastfood_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: fastfood_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus
+  wrappers:
+    load_predictor:
+      model_path: artifacts/case_study/predictors/fastfood_2zone_lstm_rbclog.pt
+  training:
+    algorithm: sac
+  outputs:
+    model_name: model_zero_shot
+# ---- PPO replication: TLD-RL (sac_plus state) and Padding (padded state) sources
+# trained with PPO; actions pass through normalize_action ([-1, 1]).
+- id: pretrain_office_smud_sac_plus__r1ppo
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_ppo_cont
+  observation_profile: office_sac_continuous_plus
+  export_profile: model_flat_export
+  wrappers: &ppo_plus_wrappers
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  outputs:
+    model_name: model
+- id: pretrain_office_smud_sacp_e2e__r1ppo
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_ppo_cont
+  observation_profile: office_sac_continuous_padded
+  export_profile: model_flat_export
+  wrappers: &ppo_pad_wrappers
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sac_plus__r1ppo
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_ppo_cont
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: model_flat_export
+  wrappers: *ppo_plus_wrappers
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sacp_e2e__r1ppo
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_ppo_cont
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: model_flat_export
+  wrappers: *ppo_pad_wrappers
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sac_plus__r1ppo
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_ppo_cont
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: model_flat_export
+  wrappers: *ppo_plus_wrappers
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sacp_e2e__r1ppo
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_ppo_cont
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: model_flat_export
+  wrappers: *ppo_pad_wrappers
+  outputs:
+    model_name: model
+- id: pretrain_mediumoffice_smud_sac_plus__r1ppo
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_ppo_cont
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: model_flat_export
+  wrappers: *ppo_plus_wrappers
+  outputs:
+    model_name: model
+- id: pretrain_mediumoffice_smud_sacp_e2e__r1ppo
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_ppo_cont
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: model_flat_export
+  wrappers: *ppo_pad_wrappers
+  outputs:
+    model_name: model
+# ---- PPO zero-shot: TLD-PPO (tldrl_zs) and Padding-PPO without fine-tuning
+# (padding_zs), one deterministic season per pair.
+- id: transfer_office_to_lbuilding_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: tldrl_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_warehouse_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: warehouse_3zone
+  method: tldrl_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_mediumoffice_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: mediumoffice_15zone
+  method: tldrl_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_office_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: office_5zone
+  method: tldrl_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_warehouse_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: warehouse_3zone
+  method: tldrl_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_mediumoffice_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: mediumoffice_15zone
+  method: tldrl_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_office_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: office_5zone
+  method: tldrl_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_lbuilding_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: tldrl_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_mediumoffice_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: mediumoffice_15zone
+  method: tldrl_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/mediumoffice_15zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_office_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: office_5zone
+  method: tldrl_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_5zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_lbuilding_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: tldrl_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/office_lbuilding_8zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_warehouse_smud_sacp_zs__r1ppo
+  stage: transfer
+  building: warehouse_3zone
+  method: tldrl_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOP_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sac_plus__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - load_predictor
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+    load_predictor:
+      model_path: artifacts/case_study/predictors/warehouse_3zone_lstm_rbclog.pt
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_lbuilding_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_warehouse_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_office_to_mediumoffice_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_office_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: office_5zone
+  method: padding_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_warehouse_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_lbuilding_to_mediumoffice_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_office_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: office_5zone
+  method: padding_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_lbuilding_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_warehouse_to_mediumoffice_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_zs
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_office_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: office_5zone
+  method: padding_zs
+  reward_profile: office_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_lbuilding_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_zs
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+- id: transfer_mediumoffice_to_warehouse_smud_sacp_padzs__r1ppo
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_zs
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_1_eval_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: PPOPAD_ZS_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e__r1ppo
+  wrappers:
+    order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - price_forecast
+    - zone_padding
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    normalize_action:
+      normalize_range: [-1.0, 1.0]
+  training:
+    algorithm: ppo
+  outputs:
+    model_name: model_zero_shot
+# ---- Comfort-weighted reward: TLD-RL sources with the linear comfort penalty;
+# cw1..cw4 set the penalty to 1 %, 10 %, 100 % and 1000 % of the cost term over
+# the RBC season.
+- id: pretrain_office_smud_sac_plus__r1cw1
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud_cw1
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_office_smud_sac_plus__r1cw2
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud_cw2
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_office_smud_sac_plus__r1cw3
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud_cw3
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_office_smud_sac_plus__r1cw4
+  stage: pretrain
+  building: office_5zone
+  method: scratch_baseline
+  reward_profile: office_reward_smud_cw4
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sac_plus__r1cw1
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud_cw1
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sac_plus__r1cw2
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud_cw2
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sac_plus__r1cw3
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud_cw3
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_lbuilding_smud_sac_plus__r1cw4
+  stage: pretrain
+  building: office_lbuilding_8zone
+  method: scratch_baseline
+  reward_profile: lbuilding_reward_smud_cw4
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sac_plus__r1cw1
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud_cw1
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sac_plus__r1cw2
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud_cw2
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sac_plus__r1cw3
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud_cw3
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_warehouse_smud_sac_plus__r1cw4
+  stage: pretrain
+  building: warehouse_3zone
+  method: scratch_baseline
+  reward_profile: warehouse_reward_smud_cw4
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_mediumoffice_smud_sac_plus__r1cw1
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud_cw1
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_mediumoffice_smud_sac_plus__r1cw2
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud_cw2
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_mediumoffice_smud_sac_plus__r1cw3
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud_cw3
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+- id: pretrain_mediumoffice_smud_sac_plus__r1cw4
+  stage: pretrain
+  building: mediumoffice_15zone
+  method: scratch_baseline
+  reward_profile: mediumoffice_reward_smud_cw4
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_v3_plus
+  export_profile: model_flat_export
+  training: *id001
+  outputs:
+    model_name: model
+# ---- Padding with frozen features: each case is its _padrl twin with method
+# padding_frozen (first hidden layer of the actor and both critics fixed); source,
+# learning rates, entropy, replay, ten seasons and the padded state are unchanged.
+- id: transfer_office_to_lbuilding_smud_sacp_padff
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_frozen
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_office_to_warehouse_smud_sacp_padff
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_frozen
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_office_to_mediumoffice_smud_sacp_padff
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_frozen
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_office_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_lbuilding_to_office_smud_sacp_padff
+  stage: transfer
+  building: office_5zone
+  method: padding_frozen
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_lbuilding_to_warehouse_smud_sacp_padff
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_frozen
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_lbuilding_to_mediumoffice_smud_sacp_padff
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_frozen
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_lbuilding_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_warehouse_to_office_smud_sacp_padff
+  stage: transfer
+  building: office_5zone
+  method: padding_frozen
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_warehouse_to_lbuilding_smud_sacp_padff
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_frozen
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_warehouse_to_mediumoffice_smud_sacp_padff
+  stage: transfer
+  building: mediumoffice_15zone
+  method: padding_frozen
+  reward_profile: mediumoffice_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: mediumoffice_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_warehouse_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_mediumoffice_to_office_smud_sacp_padff
+  stage: transfer
+  building: office_5zone
+  method: padding_frozen
+  reward_profile: office_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: office_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_mediumoffice_to_lbuilding_smud_sacp_padff
+  stage: transfer
+  building: office_lbuilding_8zone
+  method: padding_frozen
+  reward_profile: lbuilding_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: lbuilding_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+- id: transfer_mediumoffice_to_warehouse_smud_sacp_padff
+  stage: transfer
+  building: warehouse_3zone
+  method: padding_frozen
+  reward_profile: warehouse_reward_smud
+  training_profile: episodes_10_sac
+  observation_profile: warehouse_sac_continuous_padded
+  export_profile: transfer_workspace_export
+  env:
+    env_name: SACP_PADFF_SMUD
+    append_timestamp: false
+  inputs:
+    source_case_id: pretrain_mediumoffice_smud_sacp_e2e
+  training:
+    algorithm: sac
+    actor_lr: 0.0001
+    critic_lr: 0.0003
+    learning_starts: 0
+  outputs:
+    model_name: model_padding_frozen
+groups:
+  paper_4building:
+  - build_office_observation_dataset
+  - rbc_office_smud_tou
+  - pretrain_office_smud_sac_e2e
+  - pretrain_office_smud_sac_plus
+  - build_lbuilding_observation_dataset
+  - rbc_lbuilding_smud_tou
+  - pretrain_lbuilding_smud_sac_e2e
+  - pretrain_lbuilding_smud_sac_plus
+  - build_warehouse_observation_dataset
+  - rbc_warehouse_smud_tou
+  - pretrain_warehouse_smud_sac_e2e
+  - pretrain_warehouse_smud_sac_plus
+  - build_mediumoffice_observation_dataset
+  - rbc_mediumoffice_smud_tou
+  - pretrain_mediumoffice_smud_sac_e2e
+  - pretrain_mediumoffice_smud_sac_plus
+  - pretrain_office_smud_sacp_e2e
+  - pretrain_lbuilding_smud_sacp_e2e
+  - pretrain_warehouse_smud_sacp_e2e
+  - transfer_office_to_lbuilding_smud_sacp_zs
+  - transfer_office_to_warehouse_smud_sacp_zs
+  - transfer_office_to_mediumoffice_smud_sacp_zs
+  - transfer_lbuilding_to_office_smud_sacp_zs
+  - transfer_lbuilding_to_warehouse_smud_sacp_zs
+  - transfer_lbuilding_to_mediumoffice_smud_sacp_zs
+  - transfer_warehouse_to_office_smud_sacp_zs
+  - transfer_warehouse_to_lbuilding_smud_sacp_zs
+  - transfer_warehouse_to_mediumoffice_smud_sacp_zs
+  - transfer_mediumoffice_to_office_smud_sacp_zs
+  - transfer_mediumoffice_to_lbuilding_smud_sacp_zs
+  - transfer_mediumoffice_to_warehouse_smud_sacp_zs
+  - transfer_office_to_lbuilding_smud_sacp_padrl
+  - transfer_office_to_warehouse_smud_sacp_padrl
+  - transfer_lbuilding_to_office_smud_sacp_padrl
+  - transfer_lbuilding_to_warehouse_smud_sacp_padrl
+  - transfer_warehouse_to_office_smud_sacp_padrl
+  - transfer_warehouse_to_lbuilding_smud_sacp_padrl
+  - pretrain_mediumoffice_smud_sacp_e2e
+  - transfer_mediumoffice_to_office_smud_sacp_padrl
+  - transfer_mediumoffice_to_lbuilding_smud_sacp_padrl
+  - transfer_mediumoffice_to_warehouse_smud_sacp_padrl
+  - transfer_office_to_mediumoffice_smud_sacp_padrl
+  - transfer_lbuilding_to_mediumoffice_smud_sacp_padrl
+  - transfer_warehouse_to_mediumoffice_smud_sacp_padrl
+  paper_extension:
+  - build_restaurant_observation_dataset
+  - build_stripmall_observation_dataset
+  - build_retail_observation_dataset
+  - build_fastfood_observation_dataset
+  - build_restaurant_observation_dataset_rbc
+  - build_stripmall_observation_dataset_rbc
+  - build_retail_observation_dataset_rbc
+  - build_fastfood_observation_dataset_rbc
+  - rbc_restaurant_smud_tou
+  - rbc_stripmall_smud_tou
+  - rbc_retail_smud_tou
+  - rbc_fastfood_smud_tou
+  - transfer_office_to_restaurant_smud_sacp_zs
+  - transfer_office_to_stripmall_smud_sacp_zs
+  - transfer_office_to_retail_smud_sacp_zs
+  - transfer_office_to_fastfood_smud_sacp_zs
+  - transfer_lbuilding_to_restaurant_smud_sacp_zs
+  - transfer_lbuilding_to_stripmall_smud_sacp_zs
+  - transfer_lbuilding_to_retail_smud_sacp_zs
+  - transfer_lbuilding_to_fastfood_smud_sacp_zs
+  - transfer_warehouse_to_restaurant_smud_sacp_zs
+  - transfer_warehouse_to_stripmall_smud_sacp_zs
+  - transfer_warehouse_to_retail_smud_sacp_zs
+  - transfer_warehouse_to_fastfood_smud_sacp_zs
+  - transfer_mediumoffice_to_restaurant_smud_sacp_zs
+  - transfer_mediumoffice_to_stripmall_smud_sacp_zs
+  - transfer_mediumoffice_to_retail_smud_sacp_zs
+  - transfer_mediumoffice_to_fastfood_smud_sacp_zs
+  r1_ppo:
+  - pretrain_office_smud_sac_plus__r1ppo
+  - pretrain_office_smud_sacp_e2e__r1ppo
+  - pretrain_lbuilding_smud_sac_plus__r1ppo
+  - pretrain_lbuilding_smud_sacp_e2e__r1ppo
+  - pretrain_warehouse_smud_sac_plus__r1ppo
+  - pretrain_warehouse_smud_sacp_e2e__r1ppo
+  - pretrain_mediumoffice_smud_sac_plus__r1ppo
+  - pretrain_mediumoffice_smud_sacp_e2e__r1ppo
+  r1_ppo_zs_tld:
+  - transfer_office_to_lbuilding_smud_sacp_zs__r1ppo
+  - transfer_office_to_warehouse_smud_sacp_zs__r1ppo
+  - transfer_office_to_mediumoffice_smud_sacp_zs__r1ppo
+  - transfer_lbuilding_to_office_smud_sacp_zs__r1ppo
+  - transfer_lbuilding_to_warehouse_smud_sacp_zs__r1ppo
+  - transfer_lbuilding_to_mediumoffice_smud_sacp_zs__r1ppo
+  - transfer_warehouse_to_office_smud_sacp_zs__r1ppo
+  - transfer_warehouse_to_lbuilding_smud_sacp_zs__r1ppo
+  - transfer_warehouse_to_mediumoffice_smud_sacp_zs__r1ppo
+  - transfer_mediumoffice_to_office_smud_sacp_zs__r1ppo
+  - transfer_mediumoffice_to_lbuilding_smud_sacp_zs__r1ppo
+  - transfer_mediumoffice_to_warehouse_smud_sacp_zs__r1ppo
+  r1_ppo_zs_pad:
+  - transfer_office_to_lbuilding_smud_sacp_padzs__r1ppo
+  - transfer_office_to_warehouse_smud_sacp_padzs__r1ppo
+  - transfer_office_to_mediumoffice_smud_sacp_padzs__r1ppo
+  - transfer_lbuilding_to_office_smud_sacp_padzs__r1ppo
+  - transfer_lbuilding_to_warehouse_smud_sacp_padzs__r1ppo
+  - transfer_lbuilding_to_mediumoffice_smud_sacp_padzs__r1ppo
+  - transfer_warehouse_to_office_smud_sacp_padzs__r1ppo
+  - transfer_warehouse_to_lbuilding_smud_sacp_padzs__r1ppo
+  - transfer_warehouse_to_mediumoffice_smud_sacp_padzs__r1ppo
+  - transfer_mediumoffice_to_office_smud_sacp_padzs__r1ppo
+  - transfer_mediumoffice_to_lbuilding_smud_sacp_padzs__r1ppo
+  - transfer_mediumoffice_to_warehouse_smud_sacp_padzs__r1ppo
+  r1_comfort:
+  - pretrain_office_smud_sac_plus__r1cw1
+  - pretrain_lbuilding_smud_sac_plus__r1cw1
+  - pretrain_warehouse_smud_sac_plus__r1cw1
+  - pretrain_mediumoffice_smud_sac_plus__r1cw1
+  - pretrain_office_smud_sac_plus__r1cw2
+  - pretrain_lbuilding_smud_sac_plus__r1cw2
+  - pretrain_warehouse_smud_sac_plus__r1cw2
+  - pretrain_mediumoffice_smud_sac_plus__r1cw2
+  - pretrain_office_smud_sac_plus__r1cw3
+  - pretrain_lbuilding_smud_sac_plus__r1cw3
+  - pretrain_warehouse_smud_sac_plus__r1cw3
+  - pretrain_mediumoffice_smud_sac_plus__r1cw3
+  - pretrain_office_smud_sac_plus__r1cw4
+  - pretrain_lbuilding_smud_sac_plus__r1cw4
+  - pretrain_warehouse_smud_sac_plus__r1cw4
+  - pretrain_mediumoffice_smud_sac_plus__r1cw4
+  r1_padff:
+  - transfer_office_to_lbuilding_smud_sacp_padff
+  - transfer_office_to_warehouse_smud_sacp_padff
+  - transfer_office_to_mediumoffice_smud_sacp_padff
+  - transfer_lbuilding_to_office_smud_sacp_padff
+  - transfer_lbuilding_to_warehouse_smud_sacp_padff
+  - transfer_lbuilding_to_mediumoffice_smud_sacp_padff
+  - transfer_warehouse_to_office_smud_sacp_padff
+  - transfer_warehouse_to_lbuilding_smud_sacp_padff
+  - transfer_warehouse_to_mediumoffice_smud_sacp_padff
+  - transfer_mediumoffice_to_office_smud_sacp_padff
+  - transfer_mediumoffice_to_lbuilding_smud_sacp_padff
+  - transfer_mediumoffice_to_warehouse_smud_sacp_padff

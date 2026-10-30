@@ -1,0 +1,138 @@
+methods:
+  scratch_baseline:
+    runner: scratch_baseline
+    requires_source_model: false
+    source_bundle_policy: none
+    normalization_policy: reset
+    default_model_name: model
+    training:
+      model_kwargs:
+        learning_rate: 0.0003
+        ent_coef: 0.0
+        batch_size: 64
+        clip_range: 0.2
+        gamma: 0.995
+  # === TLD-RL family (proposed method) ===
+  # Reduced supervisory state with LSTM load predictor; policy π_φ is
+  # transferred across buildings while the building-specific load interface
+  # g_θ is refit on target data.
+
+  tldrl_zs:
+    # TLD-RL zero-shot: load source π_φ, run target eval with target's own
+    # load predictor. No policy training. Paper's primary deployment mode.
+    runner: zero_shot
+    requires_source_model: true
+    source_bundle_policy: required
+    normalization_policy: reuse
+    default_model_name: model_zero_shot
+
+  padding_zs:
+    # Padding without fine-tuning: padded source policy deployed frozen on the target's padded
+    # state (zero-shot, no fine-tuning); same runner as tldrl_zs.
+    runner: zero_shot
+    requires_source_model: true
+    source_bundle_policy: required
+    normalization_policy: reuse
+    default_model_name: model_zero_shot
+
+  tldrl_ft:
+    # TLD-RL fine-tune: load source π_φ, continue training all weights on
+    # target. Paper's optional post-deployment extension.
+    runner: continue_finetune
+    requires_source_model: true
+    source_bundle_policy: required
+    normalization_policy: reuse
+    default_model_name: model_continued
+    training:
+      model_kwargs:
+        learning_rate: 0.0003
+        ent_coef: 0.0
+        batch_size: 64
+        clip_range: 0.2
+        gamma: 0.995
+
+  # === Baselines compared against TLD-RL ===
+
+  hidden_core_transfer:
+    # Hou et al. ref [9] style: reset input + output layers, keep only the
+    # hidden mlp_extractor weights from source. Fine-tune with PPO/SAC on
+    # target. Baseline for TLD-RL comparison.
+    runner: e2e_finetune
+    requires_source_model: true
+    source_bundle_policy: required
+    normalization_policy: reset
+    default_model_name: model_e2e_finetuned
+    copy_policy: hidden_core_only
+    reset_input_layer: true
+    reset_output_layers: true
+    freeze_core: false
+    training:
+      model_kwargs:
+        learning_rate: 0.0003
+        ent_coef: 0.0
+        batch_size: 64
+        clip_range: 0.2
+        gamma: 0.995
+
+  bc_pretrain:
+    # Source-side step of Kadamala et al. ref [30] (DP40d). Collect RBC1
+    # demonstrations on source env via RBC tour, supervised-train the SAC
+    # actor's mean head via MSE on demo actions. Critic stays at default
+    # SAC init. Output of this method is consumed by `padding_transfer`.
+    runner: bc_pretrain
+    requires_source_model: false
+    source_bundle_policy: none
+    normalization_policy: reset
+    default_model_name: model_bc
+
+  bc_then_finetune_ppo:
+    # PPO Discrete(2) BC warmstart + RL fine-tune in one pass.
+    # 1) Collect RBC1 demos on source env. 2) BC-train PPO actor via
+    # cross-entropy on demo actions. 3) PPO learn() for `episodes` episodes
+    # to fine-tune from RBC1-imitating init. Designed for right-sized
+    # canonical SMUD environments where RBC1 is best static and pure RL
+    # struggles to learn the schedule from scratch.
+    runner: bc_then_finetune_ppo
+    requires_source_model: false
+    source_bundle_policy: none
+    normalization_policy: reset
+    default_model_name: model
+
+  padding_transfer:
+    # Kadamala et al. ref [30] (DP40d): BC-pretrained source actor →
+    # duplication padding (handled at obs-wrapper level by ZonePadding) →
+    # SAC finetune on target. Uses a dedicated runner with three changes
+    # vs continue_finetune to preserve BC initialisation against SAC's
+    # max-entropy regime: learning_starts=0, asymmetric LR (actor 1e-5,
+    # critic 3e-4), and a fixed low entropy coefficient (0.01).
+    # Mirrors paddingpaper's own actor-warmup / critic-decay schedule.
+    runner: padding_transfer
+    requires_source_model: true
+    source_bundle_policy: required
+    normalization_policy: reuse
+    default_model_name: model_padding_transferred
+  padding_frozen:
+    # Padding with frozen features: the padding_transfer fine-tuning with one
+    # change: the first
+    # hidden layer (weight + bias) of the actor and of both critics is fixed
+    # (target critic copied to match); only the upper layers are fine-tuned.
+    # Cases: transfer_<s>_to_<t>_smud_sacp_padff.
+    runner: padding_transfer
+    requires_source_model: true
+    source_bundle_policy: required
+    normalization_policy: reuse
+    default_model_name: model_padding_frozen
+    training:
+      freeze_first_layer: true
+  rbc_tou:
+    runner: rbc_tou
+    requires_source_model: false
+    source_bundle_policy: none
+    normalization_policy: reset
+    default_model_name: model_rbc
+  rbc_tou_v2:
+    runner: rbc_tou_v2
+    requires_source_model: false
+    source_bundle_policy: none
+    normalization_policy: reset
+    default_model_name: model_rbc_v2

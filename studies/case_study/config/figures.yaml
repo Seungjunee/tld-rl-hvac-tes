@@ -1,0 +1,571 @@
+figures:
+  # ============================================================
+  # Cumulative Reward (Episode 1 vs Episode 20) — 12 transfer directions
+  # ============================================================
+
+  cumulative_reward/restaurant_to_office:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_office_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_office_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_restaurant_to_office_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_restaurant_to_office_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_restaurant_to_office_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_restaurant_to_office_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/restaurant_to_lbuilding:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_lbuilding_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_lbuilding_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_restaurant_to_lbuilding_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_restaurant_to_lbuilding_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_restaurant_to_lbuilding_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_restaurant_to_lbuilding_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/office_to_restaurant:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_restaurant_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_restaurant_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_office_to_restaurant_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_office_to_restaurant_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_office_to_restaurant_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_office_to_restaurant_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/office_to_lbuilding:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_lbuilding_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_lbuilding_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_office_to_lbuilding_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_office_to_lbuilding_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_office_to_lbuilding_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_office_to_lbuilding_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/lbuilding_to_restaurant:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_restaurant_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_restaurant_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_lbuilding_to_restaurant_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_lbuilding_to_restaurant_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_lbuilding_to_restaurant_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_lbuilding_to_restaurant_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/lbuilding_to_office:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_office_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_office_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_lbuilding_to_office_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_lbuilding_to_office_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_lbuilding_to_office_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_lbuilding_to_office_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/restaurant_to_stripmall:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_stripmall_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_stripmall_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_restaurant_to_stripmall_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_restaurant_to_stripmall_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_restaurant_to_stripmall_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_restaurant_to_stripmall_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/office_to_stripmall:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_stripmall_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_stripmall_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_office_to_stripmall_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_office_to_stripmall_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_office_to_stripmall_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_office_to_stripmall_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/lbuilding_to_stripmall:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_stripmall_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_stripmall_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_lbuilding_to_stripmall_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_lbuilding_to_stripmall_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_lbuilding_to_stripmall_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_lbuilding_to_stripmall_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/stripmall_to_restaurant:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_restaurant_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_restaurant_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_stripmall_to_restaurant_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_stripmall_to_restaurant_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_stripmall_to_restaurant_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_stripmall_to_restaurant_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/stripmall_to_office:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_office_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_office_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_stripmall_to_office_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_stripmall_to_office_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_stripmall_to_office_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_stripmall_to_office_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  cumulative_reward/stripmall_to_lbuilding:
+    type: cumulative_reward
+    style: paper_default
+    runs:
+      - label: Baseline (Episode 1)
+        case_id: train_lbuilding_from_scratch_baseline
+        selector: first
+        line_style: solid
+        color_group: baseline
+      - label: Baseline (Episode 20)
+        case_id: train_lbuilding_from_scratch_baseline
+        selector: last_complete
+        line_style: dashed
+        color_group: baseline
+      - label: Feature TL (Episode 1)
+        case_id: transfer_stripmall_to_lbuilding_feature_continue
+        selector: first
+        line_style: solid
+        color_group: feature_tl
+      - label: Feature TL (Episode 20)
+        case_id: transfer_stripmall_to_lbuilding_feature_continue
+        selector: last_complete
+        line_style: dashed
+        color_group: feature_tl
+      - label: E2E TL (Episode 1)
+        case_id: transfer_stripmall_to_lbuilding_e2e_finetune
+        selector: first
+        line_style: solid
+        color_group: e2e_tl
+      - label: E2E TL (Episode 20)
+        case_id: transfer_stripmall_to_lbuilding_e2e_finetune
+        selector: last_complete
+        line_style: dashed
+        color_group: e2e_tl
+  # ============================================================
+  # Learning Curves — per target building (all methods combined)
+  # ============================================================
+
+  learning_curves/restaurant_as_target:
+    type: learning_curves
+    style: paper_default
+    max_episodes: 20
+    runs:
+      - label: Scratch Baseline
+        case_id: train_restaurant_from_scratch_baseline
+      - label: Office Feature TL
+        case_id: transfer_office_to_restaurant_feature_continue
+      - label: Office E2E TL
+        case_id: transfer_office_to_restaurant_e2e_finetune
+      - label: LBuilding Feature TL
+        case_id: transfer_lbuilding_to_restaurant_feature_continue
+      - label: LBuilding E2E TL
+        case_id: transfer_lbuilding_to_restaurant_e2e_finetune
+      - label: StripMall Feature TL
+        case_id: transfer_stripmall_to_restaurant_feature_continue
+      - label: StripMall E2E TL
+        case_id: transfer_stripmall_to_restaurant_e2e_finetune
+  learning_curves/office_as_target:
+    type: learning_curves
+    style: paper_default
+    max_episodes: 20
+    runs:
+      - label: Scratch Baseline
+        case_id: train_office_from_scratch_baseline
+      - label: Restaurant Feature TL
+        case_id: transfer_restaurant_to_office_feature_continue
+      - label: Restaurant E2E TL
+        case_id: transfer_restaurant_to_office_e2e_finetune
+      - label: LBuilding Feature TL
+        case_id: transfer_lbuilding_to_office_feature_continue
+      - label: LBuilding E2E TL
+        case_id: transfer_lbuilding_to_office_e2e_finetune
+      - label: StripMall Feature TL
+        case_id: transfer_stripmall_to_office_feature_continue
+      - label: StripMall E2E TL
+        case_id: transfer_stripmall_to_office_e2e_finetune
+  learning_curves/lbuilding_as_target:
+    type: learning_curves
+    style: paper_default
+    max_episodes: 20
+    runs:
+      - label: Scratch Baseline
+        case_id: train_lbuilding_from_scratch_baseline
+      - label: Restaurant Feature TL
+        case_id: transfer_restaurant_to_lbuilding_feature_continue
+      - label: Restaurant E2E TL
+        case_id: transfer_restaurant_to_lbuilding_e2e_finetune
+      - label: Office Feature TL
+        case_id: transfer_office_to_lbuilding_feature_continue
+      - label: Office E2E TL
+        case_id: transfer_office_to_lbuilding_e2e_finetune
+      - label: StripMall Feature TL
+        case_id: transfer_stripmall_to_lbuilding_feature_continue
+      - label: StripMall E2E TL
+        case_id: transfer_stripmall_to_lbuilding_e2e_finetune
+  # ============================================================
+  # Pretrain Learning Curves — source policy training (30 episodes)
+  # ============================================================
+
+  learning_curves/pretrain_feature:
+    type: learning_curves
+    style: paper_default
+    runs:
+      - label: Restaurant (Feature)
+        case_id: pretrain_restaurant_feature_policy
+      - label: Office (Feature)
+        case_id: pretrain_office_policy
+      - label: LBuilding (Feature)
+        case_id: pretrain_lbuilding_policy
+      - label: StripMall (Feature)
+        case_id: pretrain_stripmall_policy
+
+  learning_curves/pretrain_native:
+    type: learning_curves
+    style: paper_default
+    runs:
+      - label: Restaurant (Native)
+        case_id: pretrain_restaurant_native_policy
+      - label: Office (Native)
+        case_id: pretrain_office_native_policy
+      - label: LBuilding (Native)
+        case_id: pretrain_lbuilding_native_policy
+      - label: StripMall (Native)
+        case_id: pretrain_stripmall_native_policy
+
+  # ============================================================
+  # Pretrain Comparison — Native vs Reduced per building
+  # ============================================================
+
+  pretrain_comparison/restaurant:
+    type: learning_curves
+    style: paper_default
+    runs:
+      - label: Native (41-dim)
+        case_id: pretrain_restaurant_native_policy
+      - label: Reduced (50-dim)
+        case_id: pretrain_restaurant_feature_policy
+
+  pretrain_comparison/office:
+    type: learning_curves
+    style: paper_default
+    runs:
+      - label: Native (49-dim)
+        case_id: pretrain_office_native_policy
+      - label: Reduced (50-dim)
+        case_id: pretrain_office_policy
+
+  pretrain_comparison/lbuilding:
+    type: learning_curves
+    style: paper_default
+    runs:
+      - label: Native (59-dim)
+        case_id: pretrain_lbuilding_native_policy
+      - label: Reduced (50-dim)
+        case_id: pretrain_lbuilding_policy
+
+  # ============================================================
+  # Medium Office figures (new building)
+  # ============================================================
+
+  learning_curves/stripmall_as_target:
+    type: learning_curves
+    style: paper_default
+    max_episodes: 20
+    runs:
+      - label: Scratch Baseline
+        case_id: train_stripmall_from_scratch_baseline
+      - label: Restaurant Feature TL
+        case_id: transfer_restaurant_to_stripmall_feature_continue
+      - label: Restaurant E2E TL
+        case_id: transfer_restaurant_to_stripmall_e2e_finetune
+      - label: Office Feature TL
+        case_id: transfer_office_to_stripmall_feature_continue
+      - label: Office E2E TL
+        case_id: transfer_office_to_stripmall_e2e_finetune
+      - label: LBuilding Feature TL
+        case_id: transfer_lbuilding_to_stripmall_feature_continue
+      - label: LBuilding E2E TL
+        case_id: transfer_lbuilding_to_stripmall_e2e_finetune
+  pretrain_comparison/stripmall:
+    type: learning_curves
+    style: paper_default
+    runs:
+      - label: Native (raw obs)
+        case_id: pretrain_stripmall_native_policy
+      - label: Reduced (51-dim)
+        case_id: pretrain_stripmall_policy
+
+figure_styles:
+  paper_default:
+    figsize: [10, 6]
+    grid_alpha: 0.3

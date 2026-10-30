@@ -1,0 +1,181 @@
+buildings:
+  restaurant_3zone:
+    env_id: Eplus-FullServiceRestaurant-mixed-continuous-v1
+    env_name_base: restaurant_3zone
+    register_yaml: sinergym/data/default_configuration/FullServiceRestaurant.yaml
+    workspace_tag: restaurant_3zone
+    reward_profile: restaurant_reward
+    runtime:
+      max_episode_store: 80
+    physical:
+      # Sized by the extension rules: season-peak CoolingRate under RBC on a
+      # 2x-plant sizing run 155.6 kW -> q_rated = 155.6 / 0.9 = 173 kW; tank
+      # 104.3 m3 (3.5 h of q_rated).
+      q_rated: 173000.0
+      cop_rated: 3.2
+      tes_setpoint_range:
+      - 5.0
+      - 10.0
+    observation_profiles:
+      raw_export: restaurant_observation_export
+      transfer_feature: restaurant_scratch_baseline_d3
+  office_5zone:
+    env_id: Eplus-5zoneTankFixed-mixed-continuous-v1
+    env_name_base: office_5zone
+    register_yaml: sinergym/data/default_configuration/5ZoneTankFixed.yaml
+    workspace_tag: office_5zone
+    reward_profile: office_reward
+    runtime:
+      max_episode_store: 80
+    physical:
+      q_rated: 80000.0
+      cop_rated: 3.2
+      tes_setpoint_range:
+      - 5.0
+      - 10.0
+    observation_profiles:
+      raw_export: office_observation_export
+      transfer_feature: office_scratch_baseline_d3
+  office_lbuilding_8zone:
+    env_id: Eplus-LBuilding-mixed-continuous-v1
+    env_name_base: office_lbuilding_8zone
+    register_yaml: sinergym/data/default_configuration/LBuilding.yaml
+    workspace_tag: office_lbuilding_8zone
+    reward_profile: lbuilding_reward
+    runtime:
+      max_episode_store: 80
+    physical:
+      # Re-calibrated 2026-05-30: actual operating max Q_load = 35.7 kW (3-seed SAC
+      # rollout). Previous 70 kW left norm space at 51% utilization; SAC obs was
+      # squeezed into [0, 0.5]. New q_rated 40 kW = 35.7 + 12% margin.
+      q_rated: 70000.0
+      cop_rated: 3.2
+      tes_setpoint_range:
+      - 5.0
+      - 10.0
+    observation_profiles:
+      raw_export: lbuilding_observation_export
+      transfer_feature: lbuilding_scratch_baseline_d3
+  # Re-activated 2026-05-14 for SAC SMUD expansion. Cooling SP 24°C weekday /
+  # 33°C weekend; range_comfort [22, 26].
+  # 2026-06-24 RESOLVED: the old "250 kW gives +8.8% transfer" story was an ARTIFACT,
+  # not a real TES benefit. A direct leverage test (rbc vs const-10 "never charge")
+  # showed RBC > const10 at BOTH 156 kW (34.84 > 34.11) AND 250 kW (40.93 > 37.97):
+  # charging the TES COSTS money for stripmall at every chiller size. The oversized
+  # 250 kW chiller simply made the RBC over-charge harder (40.93, a worse baseline),
+  # so a "don't charge" policy scored +7.2% against it — the SAC's +8.8% was that, not
+  # smart shifting. Cause is NOT load timing (on-peak load 18.5%, > office's 15.1%) nor
+  # tank size (tank stores 3.6x the daily on-peak load); it is the plant's TES round-trip
+  # inefficiency (5°C cold-water charging COP penalty + standing loss) exceeding the TOU
+  # benefit. stripmall is therefore a genuine TES-RESISTANT building (kept as an honest
+  # contrast case 2026-06-24). q_rated is set to 156 kW purely for PLR_max~0.94
+  # normalization parity; it is NOT a transfer-strength knob.
+  stripmall_10zone:
+    env_id: Eplus-StripMall-mixed-continuous-v1
+    env_name_base: stripmall_10zone
+    register_yaml: sinergym/data/default_configuration/StripMall.yaml
+    workspace_tag: stripmall_10zone
+    reward_profile: stripmall_reward
+    runtime:
+      max_episode_store: 80
+    physical:
+      # Sized by the extension rules: season-peak CoolingRate under RBC on a
+      # 2x-plant sizing run 202.5 kW (weekend HVAC off) -> q_rated = 202.5 / 0.9
+      # = 225 kW; tank 135.6 m3 (3.5 h of q_rated).
+      q_rated: 225000.0
+      cop_rated: 3.2
+      tes_setpoint_range:
+      - 5.0
+      - 10.0
+    observation_profiles:
+      raw_export: stripmall_observation_export
+      transfer_feature: stripmall_scratch_baseline_d3
+  warehouse_3zone:
+    env_id: Eplus-Warehouse-mixed-continuous-v1
+    env_name_base: warehouse_3zone
+    register_yaml: sinergym/data/default_configuration/Warehouse.yaml
+    workspace_tag: warehouse_3zone
+    reward_profile: warehouse_reward
+    runtime:
+      max_episode_store: 80
+    physical:
+      # Re-calibrated 2026-05-30: actual operating max Q_load = 56.85 kW = 99.95%
+      # of previous q_rated (saturation at norm=1.0 boundary). New q_rated 65 kW
+      # = 56.85 + 14% margin for stable PhysicalNormalize.
+      q_rated: 57000.0
+      cop_rated: 3.2
+      tes_setpoint_range:
+      - 5.0
+      - 10.0
+    observation_profiles:
+      raw_export: warehouse_observation_export
+      transfer_feature: warehouse_scratch_baseline_d3
+
+  # DOE 90.1-2019 stand-alone retail (RT), sized by the extension rules: season-peak
+  # CoolingRate under RBC on a 2x-plant sizing run 191.2 kW (a morning start-up peak)
+  # -> q_rated = 191.2 / 0.9 = 212.4 kW; tank 128.0 m3 (3.5 h). The converted units
+  # run their fans at constant volume, as the restaurant and strip-mall models.
+  retail_4zone:
+    env_id: Eplus-RetailStandalone-mixed-continuous-v1
+    env_name_base: retail_4zone
+    register_yaml: sinergym/data/default_configuration/RetailStandalone.yaml
+    workspace_tag: retail_4zone
+    reward_profile: retail_reward_smud
+    runtime:
+      max_episode_store: 80
+    physical:
+      q_rated: 212400.0
+      cop_rated: 3.2
+      tes_setpoint_range:
+      - 5.0
+      - 10.0
+    observation_profiles:
+      raw_export: retail_observation_export
+      transfer_feature: retail_sac_continuous_plus
+
+  # DOE 90.1-2019 quick-service (fast-food) restaurant (QS); 2 cooled zones (Dining,
+  # Kitchen; attic unconditioned). The donor's two-speed fan staging is kept. Sized by
+  # the extension rules: season-peak CoolingRate under RBC on a 2x-plant sizing run
+  # 87.28 kW (a midday peak) -> q_rated = 87.28 / 0.9 = 97.0 kW; tank 58.5 m3 (3.5 h),
+  # 8 m high.
+  fastfood_2zone:
+    env_id: Eplus-RestaurantFastFood-mixed-continuous-v1
+    env_name_base: fastfood_2zone
+    register_yaml: sinergym/data/default_configuration/RestaurantFastFood.yaml
+    workspace_tag: fastfood_2zone
+    reward_profile: fastfood_reward_smud
+    runtime:
+      max_episode_store: 80
+    physical:
+      q_rated: 97000.0
+      cop_rated: 3.2
+      tes_setpoint_range:
+      - 5.0
+      - 10.0
+    observation_profiles:
+      raw_export: fastfood_observation_export
+      transfer_feature: fastfood_sac_continuous_plus
+
+  # MediumOffice (15 conditioned zones, ASHRAE 90.1 ref).
+  # Stratified tank 100 m³ (preserved from Mixed→Stratified conversion).
+  # Added 2026-05-29 for SMUD + SAC pretrain (no transfer scope yet).
+  # q_rated TBD after sanity-run eplusout.eio autosize verification.
+  mediumoffice_15zone:
+    env_id: Eplus-MediumOfficeFinal-mixed-continuous-v1
+    env_name_base: mediumoffice_15zone
+    register_yaml: sinergym/data/default_configuration/MediumOffice_final.yaml
+    workspace_tag: mediumoffice_15zone
+    reward_profile: mediumoffice_reward
+    runtime:
+      max_episode_store: 80
+    physical:
+      q_rated: 500000.0   # actual operating peak ~390 kW (CoolingRate p99 = 262 kW, max 390 kW from D1 dataset)
+                          # autosize 113758 was design-size only; actual chiller operates 3.4× above
+                          # autosize → normalization breaks SAC. Adjusted 2026-05-29.
+      cop_rated: 3.2
+      tes_setpoint_range:
+      - 5.0
+      - 10.0
+    observation_profiles:
+      raw_export: mediumoffice_observation_export
+      transfer_feature: mediumoffice_sac_continuous

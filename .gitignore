@@ -1,0 +1,110 @@
+# ==========================================
+# 1. Python & Environment Basic
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints
+*.egg-info
+.venv/
+env/
+venv/
+.env
+
+# ==========================================
+# 2. EnergyPlus & Sinergym Core
+# ==========================================
+EnergyPlus*/
+Eplus-*/
+Sinergym_output/
+socket.cfg
+.lock
+
+# ==========================================
+# 3. Simulation Results
+# ==========================================
+# Simulation result folders (every folder ending in res1, res2, ...)
+*-res*/
+examples/*-res*/
+artifacts/
+
+# Experiment workspaces
+examples/BASELINE_E2E_*/
+examples/CONTINUE_TRAINING_MODEL-*/
+examples/DUPPAD_TRAIN_*/
+examples/SRC_MAPPING_*/
+examples/TGT_TMP_*/
+examples/demo-v1-*/
+examples/SaveResults/
+
+# Data and derived files
+*.csv
+*.csv.gz
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.htm
+*.html
+
+# ==========================================
+# 4. EnergyPlus Engine Outputs (individual files)
+# ==========================================
+*.audit
+*.bnd
+*.dxf
+*.eio
+*.end
+*.err
+*.eso
+*.mdd
+*.mtd
+*.mtr
+*.rdd
+*.sci
+*.shd
+*.dbg
+*.expidf
+*.epJSON.json
+
+# ==========================================
+# 5. ML Models & Logging
+# ==========================================
+tensorboard*/
+*.zip
+best_model*/
+mlruns/
+wandb/
+artifacts/
+.ruff_cache/
+
+# ==========================================
+# 6. Documentation & Packaging
+# ==========================================
+docs/source/_build/
+docs/build/
+dist/
+PYTEST*/
+.pytest_cache/
+.pytype/
+.coverage
+codecov
+coverage.xml
+cov.xml
+
+# ==========================================
+# 7. Credentials & Scripts
+# ==========================================
+google-storage.json
+start_mlflow_tracking.sh
+
+# ==========================================
+# 8. Logs
+# ==========================================
+*.log
+
+# ==========================================
+# 9. Local-only working dirs (not for repo)
+# ==========================================
+d3rlpy_logs/
+*.lstm_backup

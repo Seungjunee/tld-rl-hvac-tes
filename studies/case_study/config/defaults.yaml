@@ -1,0 +1,73 @@
+paths:
+  project_root: .
+  artifact_root: artifacts/case_study
+  workspace_root: artifacts/case_study/workspaces
+  export_root: artifacts/case_study/exports
+  figure_root: artifacts/case_study/figures
+  manifest_root: artifacts/case_study/manifests
+  third_party_root: artifacts/case_study/third_party
+
+runtime:
+  episode_fallback_policy: previous_complete
+  continue_on_error: true
+  fail_fast: false
+
+wrappers:
+  order:
+    - day_of_week
+    - datetime
+    - chiller_status
+    - comfort_violation
+    - weather_forecast
+    - setpoint_forecast
+    - cpu_load_forecast
+    - price_forecast
+    - load_predictor
+    - oracle_load_forecast
+    - csv_features
+    - logger
+    - csv_logger
+    - reduce_observation
+    - physical_normalize_observation
+    - normalize_observation
+    - physical_normalize_reward
+    - normalize_action
+    - discretize_action
+  day_of_week: null
+  datetime: null
+  chiller_status: null
+  comfort_violation: null
+  weather_forecast: null
+  setpoint_forecast: null
+  cpu_load_forecast: null
+  price_forecast: null
+  load_predictor: null
+  oracle_load_forecast: null
+  csv_features: null
+  logger: true
+  csv_logger: true
+  reduce_observation: null
+  physical_normalize_observation: null
+  normalize_observation: null
+  physical_normalize_reward: null
+  normalize_action: false
+  discretize_action: null
+
+training:
+  policy: MlpPolicy
+  verbose: 1
+  episodes: null
+  total_timesteps: null
+  log_interval: 100
+  reset_num_timesteps: false
+  learn_kwargs: {}
+  model_kwargs: {}
+  policy_kwargs: null
+  evaluation:
+    enabled: false
+    n_eval_episodes: 1
+    eval_freq_episodes: 2
+    deterministic: true
+
+plotting:
+  default_format: png
